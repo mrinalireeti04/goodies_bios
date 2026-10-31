@@ -1,4 +1,6 @@
-"""Function 1: MediaPipe hand detection on first-person factory video.
+"""Function 1: hand detection on first-person factory video.
+
+Engines: MediaPipe (default, fast) or RTMPose (--engine rtmpose, higher accuracy).
 
 Writes one PS1Frame record per processed frame to hands.jsonl.
 All processing is local; no frames are uploaded or printed.
@@ -176,13 +178,16 @@ def draw_overlay(bgr, hands):
     for h in hands:
         color = COLORS[h["side"]]
         pts = [(int(round(x)), int(round(y))) for x, y in h["kp2d_px"]]
+        bx1, by1, bx2, by2 = [int(round(v)) for v in h["bbox_px"]]
+        pad = 12  # the box is the min/max of the 21 points, so pad it to enclose the hand
+        cv2.rectangle(out, (bx1 - pad, by1 - pad), (bx2 + pad, by2 + pad), color, 3, cv2.LINE_AA)
         for a, b in CONNECTIONS:
             cv2.line(out, pts[a], pts[b], color, 2, cv2.LINE_AA)
         for p in pts:
             cv2.circle(out, p, 4, color, -1, cv2.LINE_AA)
         score = h["handedness_score"]
         label = h["side"] + (f" {score:.2f}" if score is not None else "")
-        x1, y1 = int(h["bbox_px"][0]), int(h["bbox_px"][1])
+        x1, y1 = int(h["bbox_px"][0]) - pad, int(h["bbox_px"][1]) - pad
         cv2.putText(out, label, (x1, max(15, y1 - 8)),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2, cv2.LINE_AA)
     return out
@@ -190,12 +195,19 @@ def draw_overlay(bgr, hands):
 
 # ---------- per frame ----------
 def process_frame(landmarker, frame, frame_idx, fps, clip_id,
-                  width=PREPROCESS_WIDTH, clahe=False, swap_lr=SWAP_LR):
-    """Chain preprocess + detection; return one PS1Frame record."""
+                  width=PREPROCESS_WIDTH, clahe=False, swap_lr=SWAP_LR, engine=None):
+    """Chain preprocess + detection; return one PS1Frame record.
+
+    With an RTMPose `engine`, MediaPipe still supplies proposals and the
+    left/right label; the 21 points come from RTMPose on the full-res frame.
+    """
     h, w = frame.shape[:2]
     t_ms = round(frame_idx * 1000 / fps)
     small = preprocess(frame, width, clahe)
     hands = detect_hands(landmarker, small, t_ms, w, h, swap_lr)
+    if engine is not None:
+        import rtm_hand
+        hands = rtm_hand.to_schema_hands(engine.estimate(frame, hands))
     return {
         "schema_version": SCHEMA_VERSION,
         "clip_id": clip_id,
@@ -283,7 +295,8 @@ def validate_file(path):
 
 # ---------- per clip ----------
 def run_clip(video, out_root="out", step=2, save_video=True,
-             clahe=False, swap_lr=SWAP_LR):
+             clahe=False, swap_lr=SWAP_LR, engine_name="mediapipe", engine=None,
+             rtm_min_score=None):
     """Process one clip, write outputs, return a summary dict."""
     video = Path(video)
     clip_id = video.stem
@@ -293,6 +306,15 @@ def run_clip(video, out_root="out", step=2, save_video=True,
     out_dir.mkdir(parents=True, exist_ok=True)
 
     landmarker = make_landmarker(MODEL_PATH)
+    if engine is None and engine_name == "rtmpose":
+        import rtm_hand
+        engine = (rtm_hand.RTMHandEngine() if rtm_min_score is None
+                  else rtm_hand.RTMHandEngine(min_kp_score=rtm_min_score))
+    elif engine is not None:
+        engine_name = "rtmpose"
+    if engine is not None:
+        engine.prev_boxes = []
+        engine.prev_hands = []
     writer = None
     processed = with_hands = 0
     score_sum, score_n = 0.0, 0
@@ -301,7 +323,7 @@ def run_clip(video, out_root="out", step=2, save_video=True,
         with open(out_dir / "hands.jsonl", "w", encoding="utf-8") as f:
             for idx, frame in read_frames(video, step):
                 rec = process_frame(landmarker, frame, idx, fps, clip_id,
-                                    PREPROCESS_WIDTH, clahe, swap_lr)
+                                    PREPROCESS_WIDTH, clahe, swap_lr, engine)
                 validate_record(rec)
                 f.write(json.dumps(rec, allow_nan=False, separators=(",", ":")) + "\n")
 
@@ -342,8 +364,12 @@ def run_clip(video, out_root="out", step=2, save_video=True,
             round(score_sum / score_n, 3) if score_n else None,
         "processing_fps": round(processed / elapsed, 2),
         "run_config": {"step": step, "fps": fps, "swap_lr": swap_lr,
-                       "clahe": clahe, "preprocess_width": PREPROCESS_WIDTH},
+                       "clahe": clahe, "preprocess_width": PREPROCESS_WIDTH,
+                       "engine": engine_name},
     }
+    if engine is not None:
+        summary["run_config"]["rtm_min_score"] = engine.min_kp_score
+        summary["rtmpose_stats"] = dict(engine.stats)
     with open(out_dir / "summary.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, allow_nan=False)
     return summary
@@ -359,6 +385,11 @@ def main(argv=None):
     ap.add_argument("--clahe", action="store_true")
     ap.add_argument("--swap", action="store_true", help="swap MediaPipe's left/right labels")
     ap.add_argument("--no-swap", action="store_true", help="do not swap left/right labels")
+    ap.add_argument("--engine", choices=["mediapipe", "rtmpose"], default="mediapipe",
+                    help="rtmpose = higher accuracy, slower (needs rtmlib + onnxruntime)")
+    ap.add_argument("--rtm-min-score", type=float, default=None,
+                    help="rtmpose: drop hands whose mean keypoint score is below this "
+                         "(default 0.2)")
     ap.add_argument("--validate", metavar="HANDS_JSONL")
     args = ap.parse_args(argv)
 
@@ -380,7 +411,8 @@ def main(argv=None):
         return 1
     for clip in clips:
         s = run_clip(clip, args.out, args.step, not args.no_video,
-                     args.clahe, (SWAP_LR or args.swap) and not args.no_swap)
+                     args.clahe, (SWAP_LR or args.swap) and not args.no_swap,
+                     args.engine, rtm_min_score=args.rtm_min_score)
         print(json.dumps(s, indent=2))
     return 0
 

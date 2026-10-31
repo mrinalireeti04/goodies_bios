@@ -1,6 +1,8 @@
 # Private footage and everything derived from it. Never commit these.
 data/
 out/
+out_rtm/
+out_rtm2/
 *.mp4
 *.avi
 *.mov

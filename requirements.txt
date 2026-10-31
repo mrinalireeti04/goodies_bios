@@ -1,2 +1,4 @@
 mediapipe>=0.10.14
 opencv-python>=4.8
+rtmlib>=0.0.13
+onnxruntime>=1.16
