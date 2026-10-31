@@ -43,6 +43,8 @@ class ForgeTraceConfig:
     # --- Video segmentation ------------------------------------------------
     segment_duration_s: float = _DEFAULT_SEGMENT_DURATION
     segment_overlap_s: float = _DEFAULT_SEGMENT_OVERLAP
+    single_request_mode: bool = False
+    max_single_request_duration_s: float = 240.0  # Support single-request for clips up to 4m (e.g. 3-minute clips)
 
     # --- Action filtering --------------------------------------------------
     confidence_threshold: float = _DEFAULT_CONFIDENCE_THRESHOLD
@@ -50,8 +52,10 @@ class ForgeTraceConfig:
 
     # --- Temporal refinement -----------------------------------------------
     enable_refinement: bool = True
+    enable_frame_refinement: bool = False  # Fine local frame-level boundary extraction (OpenCV)
     refinement_window_s: float = _DEFAULT_REFINEMENT_WINDOW
     refinement_step_s: float = _DEFAULT_REFINEMENT_STEP
+    max_frame_refinement_actions: int = 10
 
     # --- Retry / rate-limit ------------------------------------------------
     max_retries: int = _DEFAULT_MAX_RETRIES

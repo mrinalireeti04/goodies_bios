@@ -37,20 +37,22 @@ The following actions were identified in a previous analysis pass of this
 factory video.  Your job is to:
 
 1. **Verify** each action actually occurs in the video.  If an action is NOT
-   visible, set its confidence to 0.0.
+   visible, set its model_confidence_score to 0.0.
 2. **Refine** the start_s and end_s timestamps to be as precise as possible:
    - start_s = the moment the specific action begins (not just hand movement
      toward an object).
    - end_s   = the moment the action is complete (not the start of the next
      action).
+   Note: Gemini video understanding operates at ~1 FPS sampling. Report the best
+   approximate timestamps without claiming unverified frame-level precision.
 3. If you notice an action that was **missed** in the original list, add it.
-4. Estimate your confidence honestly.
+4. Estimate your model_confidence_score honestly (0.0 to 1.0) as uncalibrated self-reported score.
 
 Previously identified actions:
 {action_list_json}
 
-Return a JSON array with the same fields:
-  verb, object, hand, start_s, end_s, confidence, description
+Return a JSON array with these fields:
+  verb, object, hand, start_s, end_s, model_confidence_score, description
 
 Return ONLY the JSON array.
 """
@@ -159,7 +161,10 @@ def _parse_refined_list(
             end = round(float(entry.get("end_s", 0)), 2)
             if end < start:
                 end = start
-            confidence = max(0.0, min(1.0, float(entry.get("confidence", 0.5))))
+            raw_conf = entry.get("model_confidence_score")
+            if raw_conf is None:
+                raw_conf = entry.get("confidence", 0.5)
+            confidence = max(0.0, min(1.0, float(raw_conf)))
 
             # Compute uncertainty relative to closest coarse match
             start_unc = 0.0
@@ -187,6 +192,7 @@ def _parse_refined_list(
                 start_s=start,
                 end_s=end,
                 duration_s=round(end - start, 4),
+                model_confidence_score=confidence,
                 confidence=confidence,
                 description=str(entry.get("description", "")),
                 evidence="Gemini video analysis (refined)",
@@ -279,6 +285,87 @@ def refine_boundary_with_frames(
     return approx_ts
 
 
+def refine_boundaries_with_frames(
+    client: GeminiClient,
+    video_path: str,
+    actions: List[RefinedAction],
+    config: ForgeTraceConfig,
+) -> tuple[List[RefinedAction], str]:
+    """Execute frame-level boundary refinement around action transition points.
+
+    Extracts local frames via OpenCV around start_s and end_s, queries Gemini with
+    frame images to refine boundaries, and returns (updated_actions, status).
+
+    Status is one of: "applied", "partial", "skipped", "failed".
+    """
+    if not getattr(config, "enable_frame_refinement", False):
+        return actions, "skipped"
+
+    if not actions:
+        return actions, "skipped"
+
+    max_actions = getattr(config, "max_frame_refinement_actions", 10)
+    actions_to_refine = actions[:max_actions]
+    remaining_actions = actions[max_actions:]
+
+    refined_results: List[RefinedAction] = []
+    attempted = 0
+    succeeded = 0
+    failed = 0
+
+    for action in actions_to_refine:
+        attempted += 1
+        start_ts = action.start_s
+        end_ts = action.end_s
+        action_succeeded = False
+
+        try:
+            new_start = refine_boundary_with_frames(
+                client, video_path, action, "start", config,
+            )
+            new_end = refine_boundary_with_frames(
+                client, video_path, action, "end", config,
+            )
+            if new_end < new_start:
+                new_end = new_start
+
+            if new_start != start_ts or new_end != end_ts:
+                action_succeeded = True
+
+            dur = round(new_end - new_start, 4)
+            refined_results.append(
+                action.model_copy(update={
+                    "start_s": new_start,
+                    "end_s": new_end,
+                    "duration_s": dur,
+                    "is_refined": True,
+                    "evidence": f"{action.evidence}; frame-boundary refined",
+                })
+            )
+            succeeded += 1
+        except Exception as exc:
+            logger.warning("Frame refinement error for action '%s': %s", action.verb, exc)
+            failed += 1
+            refined_results.append(action)
+
+    all_actions = refined_results + remaining_actions
+
+    if failed == attempted and attempted > 0:
+        status = "failed"
+    elif succeeded == attempted and attempted > 0:
+        status = "applied"
+    elif succeeded > 0:
+        status = "partial"
+    else:
+        status = "skipped"
+
+    logger.info(
+        "Frame-level boundary refinement complete: status=%s (%d attempted, %d succeeded, %d failed)",
+        status, attempted, succeeded, failed,
+    )
+    return all_actions, status
+
+
 # ---------------------------------------------------------------------------
 # Convenience: coarse → refined passthrough
 # ---------------------------------------------------------------------------
@@ -296,6 +383,7 @@ def _coarse_to_refined(
             start_s=a.start_s,
             end_s=a.end_s,
             duration_s=a.duration_s,
+            model_confidence_score=a.model_confidence_score,
             confidence=a.confidence,
             description=a.description,
             evidence=a.evidence,

@@ -54,6 +54,7 @@ def assign_task_ids(
                 end_s=action.end_s,
                 duration_s=duration,
             ),
+            model_confidence_score=getattr(action, "model_confidence_score", action.confidence),
             confidence=action.confidence,
             description=action.description or task_name,
             evidence=action.evidence,

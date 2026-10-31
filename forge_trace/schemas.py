@@ -55,10 +55,21 @@ class ActionPrediction(BaseModel):
     hand: Optional[str] = None
     start_s: float = Field(..., ge=0)
     end_s: float = Field(..., ge=0)
-    confidence: float = Field(0.5, ge=0.0, le=1.0)
+    model_confidence_score: float = Field(0.5, ge=0.0, le=1.0, description="Model self-reported confidence score (uncalibrated)")
+    confidence: float = Field(0.5, ge=0.0, le=1.0, description="Alias for model_confidence_score")
     description: str = ""
     evidence: str = "Visual observation"
     segment_index: Optional[int] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _sync_confidence_input(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "model_confidence_score" in data and "confidence" not in data:
+                data["confidence"] = data["model_confidence_score"]
+            elif "confidence" in data and "model_confidence_score" not in data:
+                data["model_confidence_score"] = data["confidence"]
+        return data
 
     @model_validator(mode="after")
     def _check_times(self) -> "ActionPrediction":
@@ -66,6 +77,9 @@ class ActionPrediction(BaseModel):
             raise ValueError(
                 f"end_s ({self.end_s}) must be >= start_s ({self.start_s})"
             )
+        # Ensure mutual sync
+        if self.model_confidence_score != self.confidence:
+            object.__setattr__(self, "confidence", self.model_confidence_score)
         return self
 
     @field_validator("hand")
@@ -96,17 +110,30 @@ class RefinedAction(BaseModel):
     start_s: float = Field(..., ge=0)
     end_s: float = Field(..., ge=0)
     duration_s: float = Field(..., ge=0)
-    confidence: float = Field(0.5, ge=0.0, le=1.0)
+    model_confidence_score: float = Field(0.5, ge=0.0, le=1.0, description="Model self-reported confidence score (uncalibrated)")
+    confidence: float = Field(0.5, ge=0.0, le=1.0, description="Alias for model_confidence_score")
     description: str = ""
     evidence: str = "Visual observation"
     start_uncertainty_s: float = Field(0.0, ge=0)
     end_uncertainty_s: float = Field(0.0, ge=0)
     is_refined: bool = False
 
+    @model_validator(mode="before")
+    @classmethod
+    def _sync_confidence_input(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "model_confidence_score" in data and "confidence" not in data:
+                data["confidence"] = data["model_confidence_score"]
+            elif "confidence" in data and "model_confidence_score" not in data:
+                data["model_confidence_score"] = data["confidence"]
+        return data
+
     @model_validator(mode="after")
     def _check_times(self) -> "RefinedAction":
         if self.end_s < self.start_s:
             raise ValueError("end_s must be >= start_s")
+        if self.model_confidence_score != self.confidence:
+            object.__setattr__(self, "confidence", self.model_confidence_score)
         return self
 
 
@@ -142,9 +169,33 @@ class TaskRecord(BaseModel):
     object: str = Field(default="unknown")
     hand: str = Field(default="unknown")
     timeline: TimelineInfo
-    confidence: float = Field(..., ge=0.0, le=1.0)
+    model_confidence_score: float = Field(default=0.5, ge=0.0, le=1.0, description="Model self-reported confidence score (uncalibrated)")
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0, description="Alias for model_confidence_score")
     description: str = ""
     evidence: str = "Visual observation"
+
+    # PS2 tool integration fields (tool association, not proven tool usage)
+    tool: Optional[str] = Field(default=None, description="Associated tool from PS2, or None/unknown if unassociated")
+    tool_hand: Optional[str] = Field(default=None, description="Hand holding the associated tool (left/right/both)")
+    tool_match_confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Confidence of tool-task association")
+    tool_association_status: str = Field(default="none", description="Association status: associated, ambiguous, hand_mismatch, or none")
+    tool_evidence: Optional[str] = Field(default=None, description="Evidence explaining the tool association")
+
+    @model_validator(mode="before")
+    @classmethod
+    def _sync_confidence_input(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if "model_confidence_score" in data and "confidence" not in data:
+                data["confidence"] = data["model_confidence_score"]
+            elif "confidence" in data and "model_confidence_score" not in data:
+                data["model_confidence_score"] = data["confidence"]
+        return data
+
+    @model_validator(mode="after")
+    def _sync_confidence(self) -> "TaskRecord":
+        if self.model_confidence_score != self.confidence:
+            object.__setattr__(self, "confidence", self.model_confidence_score)
+        return self
 
 
 # ---------------------------------------------------------------------------
@@ -172,9 +223,19 @@ class ProcessingMetadata(BaseModel):
     model_used: str = ""
     segments_analyzed: int = 0
     processing_time_s: float = 0.0
+    timestamp_refinement_status: str = Field(default="skipped", description="Refinement status: applied, partial, skipped, or failed")
     timestamp_refinement_applied: bool = False
+    single_request_mode: bool = False
     enrichment_sources: List[str] = Field(default_factory=list)
     failed_segments: List[int] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _sync_applied(self) -> "ProcessingMetadata":
+        if self.timestamp_refinement_status in ("applied", "partial"):
+            object.__setattr__(self, "timestamp_refinement_applied", True)
+        elif self.timestamp_refinement_status in ("skipped", "failed"):
+            object.__setattr__(self, "timestamp_refinement_applied", False)
+        return self
 
 
 # ---------------------------------------------------------------------------

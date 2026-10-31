@@ -40,26 +40,28 @@ holding and the other action are separate only when they are distinct tasks.
 5. Do NOT invent actions that are not clearly visible in the video.
 6. Provide approximate start and end timestamps in **seconds** from the \
 beginning of the video.{time_range_note}
+   NOTE: Model operates at ~1 FPS sampling; timestamps represent approximate \
+semantic action boundaries, not frame-exact boundaries.
 7. If you cannot determine the object or hand, set the field to null.
-8. Estimate your confidence honestly — use lower values when the view is \
-obstructed or the action is ambiguous.
+8. Estimate your model_confidence_score honestly (0.0 to 1.0) — use lower values when the view is \
+obstructed or the action is ambiguous. This is an uncalibrated self-reported score, not a calibrated probability.
 
 For each action return a JSON object with these fields:
-  verb        – the action verb phrase (e.g. "pick up", "fasten", "align")
-  object      – the object involved, or null
-  hand        – "left", "right", "both", or null
-  start_s     – start time in seconds
-  end_s       – end time in seconds
-  confidence  – 0.0–1.0
-  description – one-sentence description
+  verb                   – the action verb phrase (e.g. "pick up", "fasten", "align")
+  object                 – the object involved, or null
+  hand                   – "left", "right", "both", or null
+  start_s                – approximate start time in seconds
+  end_s                  – approximate end time in seconds
+  model_confidence_score – 0.0–1.0 self-reported confidence
+  description            – one-sentence description
 
 Return ONLY a JSON array of action objects.  No other text.
 """
 
 _TIME_RANGE_NOTE = """
-   NOTE: This video clip corresponds to the time range \
+   NOTE: This video segment corresponds to the time range \
 {start:.1f}s – {end:.1f}s of the full recording.  Report all timestamps \
-relative to the **clip start** (i.e. 0 s = the first frame of this clip).
+relative to the **segment start** (0.0 s = start of this segment).
 """
 
 
@@ -116,8 +118,24 @@ def parse_action_list(
             logger.warning("Action entry %d is not a dict — skipping", idx)
             continue
         try:
-            start = float(entry.get("start_s", 0)) + offset
-            end = float(entry.get("end_s", 0)) + offset
+            raw_start = float(entry.get("start_s", 0))
+            raw_end = float(entry.get("end_s", 0))
+
+            # Consistent timestamp convention:
+            # If segment start > 0 and raw_start is already within [segment.start_s - 1.0, segment.end_s + 5.0],
+            # the model returned global timestamps. Otherwise, it returned segment-relative timestamps
+            # and we convert to original-video timestamps exactly once.
+            if segment is not None and segment.start_s > 0:
+                if raw_start >= segment.start_s - 1.0 and (seg_end is None or raw_end <= seg_end + 5.0):
+                    start = raw_start
+                    end = raw_end
+                else:
+                    start = raw_start + offset
+                    end = raw_end + offset
+            else:
+                start = raw_start
+                end = raw_end
+
             # Clamp end to segment boundary if applicable
             if seg_end is not None:
                 end = min(end, seg_end)
@@ -129,13 +147,19 @@ def parse_action_list(
                 logger.warning("Action entry %d has empty verb — skipping", idx)
                 continue
 
+            raw_conf = entry.get("model_confidence_score")
+            if raw_conf is None:
+                raw_conf = entry.get("confidence", 0.5)
+            conf = _clamp(float(raw_conf), 0.0, 1.0)
+
             ap = ActionPrediction(
                 verb=verb.lower(),
                 object=_clean_optional(entry.get("object")),
                 hand=_clean_optional(entry.get("hand")),
                 start_s=round(start, 2),
                 end_s=round(end, 2),
-                confidence=_clamp(float(entry.get("confidence", 0.5)), 0, 1),
+                model_confidence_score=conf,
+                confidence=conf,
                 description=str(entry.get("description", "")),
                 evidence="Gemini video analysis",
                 segment_index=seg_idx,
@@ -161,13 +185,22 @@ def analyze_segment(
 ) -> List[ActionPrediction]:
     """Run coarse action recognition on *video_file* for one segment.
 
-    Returns a list of :class:`ActionPrediction` objects with timestamps
-    already mapped to the full-video timeline.
+    Uses VideoMetadata clipping window via start_offset_s and end_offset_s
+    when a specific segment window is specified.
     """
     prompt = build_coarse_prompt(segment)
 
+    start_offset = segment.start_s if segment and segment.start_s > 0 else None
+    end_offset = segment.end_s if segment else None
+
     try:
-        raw_text = client.analyze_video(video_file, prompt, json_mode=True)
+        raw_text = client.analyze_video(
+            video_file,
+            prompt,
+            json_mode=True,
+            start_offset_s=start_offset,
+            end_offset_s=end_offset,
+        )
     except Exception as exc:
         seg_idx = segment.index if segment else 0
         raise SegmentAnalysisError(

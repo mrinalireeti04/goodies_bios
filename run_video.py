@@ -43,6 +43,17 @@ def parse_args():
         default=None,
         help="Gemini API key (defaults to GEMINI_API_KEY environment variable).",
     )
+    parser.add_argument(
+        "--tools-path",
+        type=str,
+        default=None,
+        help="Optional path to PS2 tool-hold events JSON file.",
+    )
+    parser.add_argument(
+        "--single-request",
+        action="store_true",
+        help="Process video in a single request (recommended for clips <= 3-4 mins).",
+    )
     return parser.parse_args()
 
 
@@ -59,12 +70,26 @@ def main():
         import os
         os.environ["GEMINI_API_KEY"] = args.api_key
 
+    tool_events = None
+    if args.tools_path:
+        tp = Path(args.tools_path)
+        if tp.exists():
+            with open(tp, "r", encoding="utf-8") as f:
+                tool_events = json.load(f)
+                if isinstance(tool_events, dict) and "tools" in tool_events:
+                    tool_events = tool_events["tools"]
+        else:
+            print(f"Warning: Tools file not found: {tp}", file=sys.stderr)
+
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     output_file = output_dir / f"{clip_id}_timeline.json"
 
     print(f"Processing video: {video_path}")
     print(f"Clip ID: {clip_id}")
+
+    from forge_trace.config import load_config
+    cfg = load_config(single_request_mode=args.single_request)
 
     try:
         timeline = process_video_to_timeline(
@@ -73,6 +98,8 @@ def main():
             object_events=None,
             hand_tracks=None,
             interaction_events=None,
+            tool_events=tool_events,
+            config=cfg,
         )
     except ForgeTraceError as err:
         print(f"Pipeline error: {err}", file=sys.stderr)

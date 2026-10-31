@@ -92,7 +92,11 @@ def plan_video_segments(
     overlap = config.segment_overlap_s
     step = seg_dur - overlap
 
-    if duration_s <= seg_dur:
+    # Check for single-request processing mode
+    if getattr(config, "single_request_mode", False) or duration_s <= seg_dur:
+        logger.info(
+            "Using single-request processing mode for %.1fs video", duration_s
+        )
         return [
             VideoSegment(
                 index=0,

@@ -116,10 +116,14 @@ class GeminiClient:
         video_file: Any,
         prompt: str,
         json_mode: bool = True,
+        start_offset_s: Optional[float] = None,
+        end_offset_s: Optional[float] = None,
     ) -> str:
         """Send a prompt + video to Gemini and return the text response.
 
         When *json_mode* is ``True`` the model is asked to respond in JSON.
+        When *start_offset_s* or *end_offset_s* are specified, passes
+        ``types.VideoMetadata`` to restrict the analysis window.
         """
         gen_config: Dict[str, Any] = {
             "temperature": 0.2,
@@ -127,8 +131,25 @@ class GeminiClient:
         if json_mode:
             gen_config["response_mime_type"] = "application/json"
 
+        contents: list = []
+        if (start_offset_s is not None and start_offset_s > 0) or end_offset_s is not None:
+            # Construct a Part with VideoMetadata clipping window
+            file_uri = getattr(video_file, "uri", None) or getattr(video_file, "name", "")
+            mime = getattr(video_file, "mime_type", "video/mp4")
+            start_str = f"{start_offset_s:.1f}s" if start_offset_s is not None else None
+            end_str = f"{end_offset_s:.1f}s" if end_offset_s is not None else None
+            video_part = types.Part(
+                file_data=types.FileData(file_uri=file_uri, mime_type=mime),
+                video_metadata=types.VideoMetadata(start_offset=start_str, end_offset=end_str),
+            )
+            contents.append(video_part)
+        else:
+            contents.append(video_file)
+
+        contents.append(prompt)
+
         return self._generate_with_retry(
-            contents=[video_file, prompt],
+            contents=contents,
             generation_config=gen_config,
         )
 

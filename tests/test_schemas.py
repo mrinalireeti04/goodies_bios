@@ -108,3 +108,54 @@ class TestTaskTimeline:
             tasks=[],
         )
         assert tl.total_tasks == 0
+
+
+class TestModelConfidenceAndToolSchemas:
+    def test_action_prediction_syncs_confidence(self):
+        ap1 = ActionPrediction(verb="fasten", start_s=0, end_s=1, model_confidence_score=0.82)
+        assert ap1.confidence == 0.82
+        assert ap1.model_confidence_score == 0.82
+
+        ap2 = ActionPrediction(verb="fasten", start_s=0, end_s=1, confidence=0.75)
+        assert ap2.model_confidence_score == 0.75
+        assert ap2.confidence == 0.75
+
+    def test_refined_action_syncs_confidence(self):
+        ra = RefinedAction(verb="fasten", start_s=0, end_s=1, duration_s=1.0, model_confidence_score=0.91)
+        assert ra.confidence == 0.91
+        assert ra.model_confidence_score == 0.91
+
+    def test_task_record_ps2_tool_fields(self):
+        tr = TaskRecord(
+            task_id="T001",
+            task_name="Cut wood piece",
+            verb="cut",
+            object="wood piece",
+            hand="right",
+            timeline=TimelineInfo(start_s=0.0, end_s=2.0, duration_s=2.0),
+            model_confidence_score=0.85,
+            tool="circular saw",
+            tool_hand="right",
+            tool_match_confidence=0.92,
+            tool_association_status="associated",
+            tool_evidence="Tool hold associated with high temporal overlap",
+        )
+        assert tr.tool == "circular saw"
+        assert tr.tool_hand == "right"
+        assert tr.tool_association_status == "associated"
+        assert tr.tool_match_confidence == 0.92
+        assert tr.confidence == 0.85
+        assert tr.model_confidence_score == 0.85
+
+    def test_processing_metadata_refinement_status_sync(self):
+        pm_applied = ProcessingMetadata(timestamp_refinement_status="applied")
+        assert pm_applied.timestamp_refinement_applied is True
+
+        pm_skipped = ProcessingMetadata(timestamp_refinement_status="skipped")
+        assert pm_skipped.timestamp_refinement_applied is False
+
+        pm_failed = ProcessingMetadata(timestamp_refinement_status="failed")
+        assert pm_failed.timestamp_refinement_applied is False
+
+        pm_partial = ProcessingMetadata(timestamp_refinement_status="partial")
+        assert pm_partial.timestamp_refinement_applied is True

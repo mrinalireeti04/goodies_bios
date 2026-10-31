@@ -41,6 +41,28 @@ class TestPlanVideoSegments:
         segments = plan_video_segments(60.0, config)
         assert len(segments) == 1
 
+    def test_single_request_mode_for_3min_clip(self, config):
+        config.single_request_mode = True
+        config.segment_duration_s = 60.0  # Even with smaller default segment duration
+        # 180s (3-minute) clip
+        segments = plan_video_segments(180.0, config)
+        assert len(segments) == 1
+        assert segments[0].start_s == 0.0
+        assert segments[0].end_s == 180.0
+        assert segments[0].duration_s == 180.0
+
+    def test_overlapping_segments_step_and_boundaries(self, config):
+        config.single_request_mode = False
+        config.segment_duration_s = 120.0
+        config.segment_overlap_s = 15.0
+        segments = plan_video_segments(180.0, config)
+        assert len(segments) == 2
+        assert segments[0].start_s == 0.0
+        assert segments[0].end_s == 120.0
+        # Segment 1 starts at step = 120 - 15 = 105.0s
+        assert segments[1].start_s == 105.0
+        assert segments[1].end_s == 180.0
+
     def test_long_video(self, config):
         config.segment_duration_s = 60.0
         config.segment_overlap_s = 10.0

@@ -56,6 +56,7 @@ def process_video_to_timeline(
     object_events: Optional[List[Dict[str, Any]]] = None,
     hand_tracks: Optional[List[Dict[str, Any]]] = None,
     interaction_events: Optional[List[Dict[str, Any]]] = None,
+    tool_events: Optional[List[Dict[str, Any]]] = None,
     *,
     config: Optional[ForgeTraceConfig] = None,
 ) -> TaskTimeline:
@@ -73,6 +74,8 @@ def process_video_to_timeline(
         MediaPipe hand-track events (hand, timestamp, landmarks …).
     interaction_events : list of dict, optional
         Hand–object interaction events from the interaction module.
+    tool_events : list of dict, optional
+        PS2 tool-hold events (tool, hand, start_s, end_s, confidence …).
     config : ForgeTraceConfig, optional
         Pipeline configuration.  Built from env vars when omitted.
 
@@ -110,6 +113,9 @@ def process_video_to_timeline(
     interaction_events = validate_enrichment_events(
         interaction_events, "interaction_events", meta.duration_s,
     )
+    tool_events = validate_enrichment_events(
+        tool_events, "tool_events", meta.duration_s,
+    )
 
     # ---- 3. Plan segments ------------------------------------------------
     segments = plan_video_segments(meta.duration_s, config)
@@ -128,13 +134,23 @@ def process_video_to_timeline(
         )
 
         # ---- 5. Temporal refinement (Pass 2) -----------------------------
+        refinement_status = "skipped"
         if config.enable_refinement and coarse_actions:
             refined_actions = refine_actions_pass2(
                 client, video_file, coarse_actions, config,
             )
+            refinement_status = "applied"
         else:
             from forge_trace.temporal_refiner import _coarse_to_refined
             refined_actions = _coarse_to_refined(coarse_actions)
+
+        # ---- 5b. Local Frame-level boundary refinement (OpenCV) ----------
+        if getattr(config, "enable_frame_refinement", False) and refined_actions:
+            from forge_trace.temporal_refiner import refine_boundaries_with_frames
+            refined_actions, frame_ref_status = refine_boundaries_with_frames(
+                client, video_path_resolved, refined_actions, config,
+            )
+            refinement_status = frame_ref_status
 
         # ---- 6. Normalise & deduplicate ----------------------------------
         cleaned_actions = normalize_and_deduplicate(refined_actions, config)
@@ -157,6 +173,11 @@ def process_video_to_timeline(
 
         # ---- 9. Build task records and summary ---------------------------
         tasks = assign_task_ids(enriched_actions)
+
+        # ---- 9b. PS2 Tool Association ------------------------------------
+        from forge_trace.enrichment import associate_ps2_tools
+        tasks = associate_ps2_tools(tasks, tool_events or None, config)
+
         summary = generate_task_summary(tasks)
 
         # ---- 10. Optional grouping ----------------------------------------
@@ -174,9 +195,12 @@ def process_video_to_timeline(
             enrichment_sources.append("MediaPipe")
         if interaction_events:
             enrichment_sources.append("Interaction")
+        if tool_events:
+            enrichment_sources.append("PS2_Tools")
 
         # ---- 12. Build timeline ------------------------------------------
         elapsed = round(time.time() - t0, 2)
+        single_req = len(segments) == 1
 
         timeline = TaskTimeline(
             clip_id=clip_id,
@@ -191,7 +215,9 @@ def process_video_to_timeline(
                 model_used=config.gemini_model,
                 segments_analyzed=len(segments),
                 processing_time_s=elapsed,
-                timestamp_refinement_applied=config.enable_refinement,
+                timestamp_refinement_status=refinement_status,
+                timestamp_refinement_applied=(refinement_status in ("applied", "partial")),
+                single_request_mode=single_req,
                 enrichment_sources=enrichment_sources,
                 failed_segments=[],
             ),

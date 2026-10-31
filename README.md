@@ -112,13 +112,15 @@ goodies_bios/
 ├── outputs/                   # Generated JSON timelines
 │   └── MTL-SGF00106-028_timeline.json
 ├── sample_videos/             # Local video storage (git-ignored)
-├── tests/                     # Test suite (109 unit tests)
+├── tests/                     # Test suite (133 unit tests)
 │   ├── test_action_normalizer.py
 │   ├── test_action_recognizer.py
 │   ├── test_enrichment.py
 │   ├── test_evaluation.py
+│   ├── test_pipeline.py
 │   ├── test_schemas.py
 │   ├── test_task_builder.py
+│   ├── test_temporal_refiner.py
 │   ├── test_validators.py
 │   └── test_video_utils.py
 ├── .env                       # Local secrets (git-ignored)
@@ -177,6 +179,8 @@ The generated JSON file adheres to the following structure:
 | `--clip-id` | Custom unique clip identifier | Filename without extension |
 | `--output-dir` | Directory to save the output JSON | `outputs` |
 | `--api-key` | Gemini API key (optional if set in `.env`) | `GEMINI_API_KEY` |
+| `--single-request` | Process clips (<=180s) in a single API call | `False` |
+| `--tools-path` | Path to PS2 tool detection events JSON | `None` |
 
 **Example:**
 ```powershell
@@ -191,4 +195,4 @@ Run the automated pytest test suite:
 ```powershell
 pytest
 ```
-*Current test suite: **109 tests passing (100%)** covering validators, schemas, video utilities, action normalization, and boundary refining.*
+*Current test suite: **133 tests passing (100%)** covering validators, schemas, video utilities, action normalization, boundary refining, PS2 tool integration, and full pipeline.*

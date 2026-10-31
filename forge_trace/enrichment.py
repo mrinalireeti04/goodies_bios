@@ -13,8 +13,9 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from forge_trace.config import ForgeTraceConfig
 from forge_trace.logging_config import get_logger
-from forge_trace.schemas import RefinedAction
+from forge_trace.schemas import RefinedAction, TaskRecord
 
 logger = get_logger("enrichment")
 
@@ -276,3 +277,223 @@ def _event_timestamp(evt: Dict[str, Any]) -> Optional[float]:
             except (ValueError, TypeError):
                 continue
     return None
+
+
+def _clean_hand_str(val: Any) -> Optional[str]:
+    if val is None:
+        return None
+    s = str(val).strip().lower()
+    return s if s in ("left", "right", "both") else None
+
+
+# ---------------------------------------------------------------------------
+# PS2 tool integration
+# ---------------------------------------------------------------------------
+
+def associate_ps2_tools(
+    tasks: List[TaskRecord],
+    tool_events: Optional[List[Dict[str, Any]]] = None,
+    config: Optional[ForgeTraceConfig] = None,
+) -> List[TaskRecord]:
+    """Associate PS2 tool-hold events with PS3 tasks using temporal overlap and hand identity.
+
+    Important: A tool being held during a task does not prove it was actively used
+    throughout that task. This represents tool association, not verified tool usage.
+
+    Returns updated TaskRecord objects with populated tool fields.
+    """
+    if not tasks:
+        return []
+
+    if not tool_events:
+        return [
+            t.model_copy(update={
+                "tool": None,
+                "tool_hand": None,
+                "tool_match_confidence": None,
+                "tool_association_status": "none",
+                "tool_evidence": "No PS2 tool-hold events provided",
+            })
+            for t in tasks
+        ]
+
+    # Pre-parse tool events
+    parsed_events: List[Dict[str, Any]] = []
+    for idx, evt in enumerate(tool_events):
+        if not isinstance(evt, dict):
+            continue
+        tool_name = str(
+            evt.get("tool") or evt.get("tool_name") or evt.get("label") or evt.get("name") or ""
+        ).strip().lower()
+        if not tool_name or tool_name in ("null", "none", "unknown"):
+            continue
+
+        hand = evt.get("hand") or evt.get("tool_hand") or evt.get("hold_hand") or evt.get("handedness")
+        hand_clean = _clean_hand_str(hand)
+
+        start_s = evt.get("start_s")
+        end_s = evt.get("end_s")
+        if start_s is None and "timestamp" in evt:
+            start_s = float(evt["timestamp"])
+            end_s = start_s + 0.5
+        elif start_s is not None and end_s is None:
+            end_s = float(start_s) + 0.5
+        elif start_s is not None and end_s is not None:
+            start_s = float(start_s)
+            end_s = float(end_s)
+        else:
+            continue
+
+        if end_s < start_s:
+            start_s, end_s = end_s, start_s
+
+        conf = float(evt.get("confidence") or evt.get("score") or 0.8)
+        conf = max(0.0, min(1.0, conf))
+
+        parsed_events.append({
+            "tool": tool_name,
+            "hand": hand_clean,
+            "start_s": start_s,
+            "end_s": end_s,
+            "confidence": conf,
+        })
+
+    enriched_tasks: List[TaskRecord] = []
+    for task in tasks:
+        t_start = task.timeline.start_s
+        t_end = task.timeline.end_s
+        t_duration = max(0.1, task.timeline.duration_s)
+        t_hand = _clean_hand_str(task.hand)
+
+        # Find all overlapping events
+        candidate_overlaps: Dict[str, Dict[str, Any]] = {}
+        hand_mismatched_tools: List[str] = []
+
+        for evt in parsed_events:
+            e_start = evt["start_s"]
+            e_end = evt["end_s"]
+            overlap = max(0.0, min(t_end, e_end) - max(t_start, e_start))
+            if overlap <= 0.05:  # ignore negligible overlap (<50ms)
+                continue
+
+            tool_name = evt["tool"]
+            evt_hand = evt["hand"]
+
+            # Hand compatibility check
+            hand_compatible = True
+            if t_hand in ("left", "right") and evt_hand in ("left", "right"):
+                if t_hand != evt_hand:
+                    hand_compatible = False
+                    if tool_name not in hand_mismatched_tools:
+                        hand_mismatched_tools.append(tool_name)
+
+            if not hand_compatible:
+                continue
+
+            if tool_name not in candidate_overlaps:
+                candidate_overlaps[tool_name] = {
+                    "total_overlap": 0.0,
+                    "intervals": [],
+                    "hands": [],
+                    "confidences": [],
+                }
+            candidate_overlaps[tool_name]["total_overlap"] += overlap
+            candidate_overlaps[tool_name]["intervals"].append((max(t_start, e_start), min(t_end, e_end)))
+            if evt_hand:
+                candidate_overlaps[tool_name]["hands"].append(evt_hand)
+            candidate_overlaps[tool_name]["confidences"].append(evt["confidence"])
+
+        # Determine association outcome
+        if not candidate_overlaps:
+            if hand_mismatched_tools:
+                enriched_tasks.append(
+                    task.model_copy(update={
+                        "tool": None,
+                        "tool_hand": None,
+                        "tool_match_confidence": None,
+                        "tool_association_status": "hand_mismatch",
+                        "tool_evidence": (
+                            f"Hand mismatch: tool(s) {', '.join(hand_mismatched_tools)} "
+                            f"held in opposing hand to task hand ({t_hand})"
+                        ),
+                    })
+                )
+            else:
+                enriched_tasks.append(
+                    task.model_copy(update={
+                        "tool": None,
+                        "tool_hand": None,
+                        "tool_match_confidence": None,
+                        "tool_association_status": "none",
+                        "tool_evidence": "No overlapping PS2 tool-hold events found",
+                    })
+                )
+            continue
+
+        # Sort candidates by total overlap descending
+        sorted_candidates = sorted(
+            candidate_overlaps.items(),
+            key=lambda x: x[1]["total_overlap"],
+            reverse=True,
+        )
+
+        top_tool, top_data = sorted_candidates[0]
+        top_overlap = top_data["total_overlap"]
+
+        # Check for ambiguity if multiple tools overlap
+        is_ambiguous = False
+        if len(sorted_candidates) > 1:
+            second_tool, second_data = sorted_candidates[1]
+            second_overlap = second_data["total_overlap"]
+
+            # If second tool overlap is within 30% of top tool, or both have significant overlap
+            # and neither clearly dominates:
+            if top_overlap > 0 and (second_overlap / top_overlap) >= 0.70:
+                is_ambiguous = True
+            elif (top_overlap - second_overlap) < (0.3 * t_duration) and second_overlap >= (0.25 * t_duration):
+                is_ambiguous = True
+
+        if is_ambiguous:
+            tools_str = ", ".join(
+                f"{name} ({data['total_overlap']:.1f}s overlap)"
+                for name, data in sorted_candidates[:3]
+            )
+            enriched_tasks.append(
+                task.model_copy(update={
+                    "tool": None,
+                    "tool_hand": None,
+                    "tool_match_confidence": None,
+                    "tool_association_status": "ambiguous",
+                    "tool_evidence": f"Ambiguous association: multiple overlapping candidate tools: {tools_str}",
+                })
+            )
+            continue
+
+        # Single clear dominant tool
+        dominant_hand = None
+        if top_data["hands"]:
+            dominant_hand = max(set(top_data["hands"]), key=top_data["hands"].count)
+        else:
+            dominant_hand = t_hand if t_hand != "unknown" else None
+
+        avg_conf = sum(top_data["confidences"]) / len(top_data["confidences"])
+        overlap_frac = min(1.0, top_overlap / t_duration)
+        match_confidence = round(0.5 * overlap_frac + 0.5 * avg_conf, 2)
+
+        evidence = (
+            f"Associated tool: '{top_tool}' held in {dominant_hand or 'unspecified'} hand "
+            f"for {top_overlap:.1f}s during task ({overlap_frac * 100:.0f}% temporal overlap). "
+            f"Note: represents tool association during task interval, not verified continuous tool usage."
+        )
+
+        enriched_tasks.append(
+            task.model_copy(update={
+                "tool": top_tool,
+                "tool_hand": dominant_hand,
+                "tool_match_confidence": match_confidence,
+                "tool_association_status": "associated",
+                "tool_evidence": evidence,
+            })
+        )
+
+    return enriched_tasks

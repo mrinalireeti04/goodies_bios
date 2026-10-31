@@ -122,3 +122,57 @@ class TestParseActionList:
         ]
         actions = parse_action_list(raw)
         assert actions[0].confidence == 1.0
+
+    def test_model_confidence_score_field(self):
+        raw = [
+            {
+                "verb": "measure",
+                "start_s": 1.0,
+                "end_s": 2.0,
+                "model_confidence_score": 0.88,
+            }
+        ]
+        actions = parse_action_list(raw)
+        assert actions[0].model_confidence_score == 0.88
+        assert actions[0].confidence == 0.88
+
+    def test_global_timestamp_not_double_offset(self):
+        seg = VideoSegment(index=1, start_s=60.0, end_s=120.0, duration_s=60.0)
+        # Model returns timestamps that are already in global time (65.0s is inside [60, 120])
+        raw = [
+            {"verb": "cut", "start_s": 65.0, "end_s": 70.0, "model_confidence_score": 0.9},
+        ]
+        actions = parse_action_list(raw, segment=seg)
+        # Should stay 65.0s, not become 65.0 + 60 = 125.0s
+        assert actions[0].start_s == 65.0
+        assert actions[0].end_s == 70.0
+
+    def test_segment_relative_converted_exactly_once(self):
+        seg = VideoSegment(index=1, start_s=60.0, end_s=120.0, duration_s=60.0)
+        # Model returns timestamps relative to segment start (0s = 60s)
+        raw = [
+            {"verb": "mark", "start_s": 5.0, "end_s": 10.0, "model_confidence_score": 0.85},
+        ]
+        actions = parse_action_list(raw, segment=seg)
+        assert actions[0].start_s == 65.0
+        assert actions[0].end_s == 70.0
+
+
+class TestAnalyzeSegmentVideoMetadata:
+    def test_analyze_segment_passes_offsets(self):
+        from unittest.mock import MagicMock
+        from forge_trace.action_recognizer import analyze_segment
+
+        client = MagicMock()
+        client.analyze_video.return_value = '[{"verb": "drill", "start_s": 2.0, "end_s": 4.0}]'
+        client.parse_json_response.return_value = [{"verb": "drill", "start_s": 2.0, "end_s": 4.0}]
+
+        seg = VideoSegment(index=1, start_s=60.0, end_s=120.0, duration_s=60.0)
+        actions = analyze_segment(client, "dummy_video_file", segment=seg)
+
+        client.analyze_video.assert_called_once()
+        _, kwargs = client.analyze_video.call_args
+        assert kwargs.get("start_offset_s") == 60.0
+        assert kwargs.get("end_offset_s") == 120.0
+        assert len(actions) == 1
+        assert actions[0].start_s == 62.0
