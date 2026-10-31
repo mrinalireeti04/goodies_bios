@@ -2,19 +2,19 @@
   "clip_id": "MTL-SGF00106-028",
   "video_path": "D:\\goodies_bios\\sample_videos\\MTL-SGF00106-028.mp4",
   "video_duration": 180.0,
-  "total_tasks": 17,
+  "total_tasks": 16,
   "unique_task_types": 4,
   "unique_task_list": [
-    "Align wood piece",
-    "Cut wood piece",
-    "Fasten wood piece",
-    "Mark wood piece"
+    "Align wood piece wood piece",
+    "Cut wood piece wood piece",
+    "Fasten with nail gun wood piece",
+    "Mark wood piece wood piece"
   ],
   "tasks": [
     {
       "task_id": "T001",
-      "task_name": "Align wood piece",
-      "verb": "align",
+      "task_name": "Align wood piece wood piece",
+      "verb": "align wood piece",
       "object": "wood piece",
       "hand": "both",
       "timeline": {
@@ -22,29 +22,41 @@
         "end_s": 5.0,
         "duration_s": 5.0
       },
-      "confidence": 0.95,
-      "description": "The worker aligns a wooden block inside the frame of a chair.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.85,
+      "confidence": 0.85,
+      "description": "The worker aligns and checks the fit of a wooden piece inside the chair frame.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T002",
-      "task_name": "Cut wood piece",
-      "verb": "cut",
+      "task_name": "Cut wood piece wood piece",
+      "verb": "cut wood piece",
       "object": "wood piece",
-      "hand": "right",
+      "hand": "both",
       "timeline": {
         "start_s": 7.0,
         "end_s": 9.0,
         "duration_s": 2.0
       },
-      "confidence": 0.95,
-      "description": "The worker cuts a small piece of wood using a table circular saw.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.9,
+      "confidence": 0.9,
+      "description": "The worker cuts a wooden piece using a table-mounted circular saw.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T003",
-      "task_name": "Align wood piece",
-      "verb": "align",
+      "task_name": "Align wood piece wood piece",
+      "verb": "align wood piece",
       "object": "wood piece",
       "hand": "both",
       "timeline": {
@@ -52,225 +64,294 @@
         "end_s": 13.0,
         "duration_s": 3.0
       },
-      "confidence": 0.95,
-      "description": "The worker checks the alignment of the cut wood piece inside the chair frame.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.85,
+      "confidence": 0.85,
+      "description": "The worker places the cut wood piece into the chair frame to check its alignment.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T004",
-      "task_name": "Cut wood piece",
-      "verb": "cut",
+      "task_name": "Cut wood piece wood piece",
+      "verb": "cut wood piece",
       "object": "wood piece",
-      "hand": "right",
+      "hand": "both",
       "timeline": {
         "start_s": 22.0,
         "end_s": 24.0,
         "duration_s": 2.0
       },
-      "confidence": 0.95,
-      "description": "The worker trims the wood piece using a circular saw.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.9,
+      "confidence": 0.9,
+      "description": "The worker cuts a wooden piece using the small table saw.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T005",
-      "task_name": "Mark wood piece",
-      "verb": "mark",
+      "task_name": "Mark wood piece wood piece",
+      "verb": "mark wood piece",
       "object": "wood piece",
       "hand": "right",
       "timeline": {
         "start_s": 26.0,
-        "end_s": 30.0,
-        "duration_s": 4.0
+        "end_s": 34.0,
+        "duration_s": 8.0
       },
-      "confidence": 0.95,
-      "description": "The worker uses a pencil to mark the cutting reference line on the fitted wood piece.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.85,
+      "confidence": 0.85,
+      "description": "The worker places the wooden block on the frame and marks it with a pencil.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T006",
-      "task_name": "Fasten wood piece",
-      "verb": "fasten",
+      "task_name": "Fasten with nail gun wood piece",
+      "verb": "fasten with nail gun",
       "object": "wood piece",
       "hand": "right",
       "timeline": {
-        "start_s": 37.0,
+        "start_s": 38.0,
         "end_s": 43.0,
-        "duration_s": 6.0
+        "duration_s": 5.0
       },
-      "confidence": 0.95,
-      "description": "The worker uses a pneumatic nail gun to fasten the wood block into the frame.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.92,
+      "confidence": 0.92,
+      "description": "The worker fastens the wooden piece into the frame using a pneumatic nail gun.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T007",
-      "task_name": "Fasten wood piece",
-      "verb": "fasten",
+      "task_name": "Fasten with nail gun wood piece",
+      "verb": "fasten with nail gun",
       "object": "wood piece",
       "hand": "right",
       "timeline": {
         "start_s": 51.0,
-        "end_s": 63.0,
-        "duration_s": 12.0
+        "end_s": 103.0,
+        "duration_s": 52.0
       },
-      "confidence": 0.95,
-      "description": "The worker continues securing the wood piece with the nail gun at different angles.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.9,
+      "confidence": 0.9,
+      "description": "The worker continues fastening the wooden elements of the frame with the nail gun.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T008",
-      "task_name": "Align wood piece",
-      "verb": "align",
+      "task_name": "Cut wood piece wood piece",
+      "verb": "cut wood piece",
       "object": "wood piece",
       "hand": "both",
       "timeline": {
-        "start_s": 77.0,
-        "end_s": 80.0,
+        "start_s": 121.0,
+        "end_s": 124.0,
         "duration_s": 3.0
       },
+      "model_confidence_score": 0.9,
       "confidence": 0.9,
-      "description": "Worker aligns a wooden block inside the sofa frame structure to check the fit.",
-      "evidence": "Gemini video analysis (refined)"
+      "description": "The worker cuts a wooden piece using the electric saw on the floor.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T009",
-      "task_name": "Cut wood piece",
-      "verb": "cut",
+      "task_name": "Mark wood piece wood piece",
+      "verb": "mark wood piece",
       "object": "wood piece",
       "hand": "right",
       "timeline": {
-        "start_s": 81.0,
-        "end_s": 84.0,
-        "duration_s": 3.0
+        "start_s": 125.0,
+        "end_s": 130.0,
+        "duration_s": 5.0
       },
-      "confidence": 0.95,
-      "description": "Worker cuts the wooden piece using a hand-held circular saw.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.85,
+      "confidence": 0.85,
+      "description": "The worker checks the fit and marks the wooden piece on the frame.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T010",
-      "task_name": "Mark wood piece",
-      "verb": "mark",
-      "object": "wood piece",
-      "hand": "right",
-      "timeline": {
-        "start_s": 86.0,
-        "end_s": 90.0,
-        "duration_s": 4.0
-      },
-      "confidence": 0.95,
-      "description": "Worker marks the wood piece with a pencil while holding it against the frame.",
-      "evidence": "Gemini video analysis (refined)"
-    },
-    {
-      "task_id": "T011",
-      "task_name": "Cut wood piece",
-      "verb": "cut",
-      "object": "wood piece",
-      "hand": "right",
-      "timeline": {
-        "start_s": 92.0,
-        "end_s": 95.0,
-        "duration_s": 3.0
-      },
-      "confidence": 0.95,
-      "description": "The worker cuts the wood piece along the marked line with the circular saw.",
-      "evidence": "Gemini video analysis (refined)"
-    },
-    {
-      "task_id": "T012",
-      "task_name": "Align wood piece",
-      "verb": "align",
+      "task_name": "Cut wood piece wood piece",
+      "verb": "cut wood piece",
       "object": "wood piece",
       "hand": "both",
       "timeline": {
-        "start_s": 96.0,
-        "end_s": 116.0,
-        "duration_s": 20.0
+        "start_s": 132.0,
+        "end_s": 134.0,
+        "duration_s": 2.0
       },
-      "confidence": 0.95,
-      "description": "The worker test-fits the freshly cut wood block into the chair frame.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.9,
+      "confidence": 0.9,
+      "description": "The worker cuts the wood piece with the circular saw.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
+    },
+    {
+      "task_id": "T011",
+      "task_name": "Align wood piece wood piece",
+      "verb": "align wood piece",
+      "object": "wood piece",
+      "hand": "both",
+      "timeline": {
+        "start_s": 135.0,
+        "end_s": 156.0,
+        "duration_s": 21.0
+      },
+      "model_confidence_score": 0.85,
+      "confidence": 0.85,
+      "description": "The worker places and fits the wood piece inside the frame structure.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
+    },
+    {
+      "task_id": "T012",
+      "task_name": "Mark wood piece wood piece",
+      "verb": "mark wood piece",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "model_confidence_score": 0.85,
+      "confidence": 0.85,
+      "description": "The worker marks the wood piece using a pencil.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T013",
-      "task_name": "Mark wood piece",
-      "verb": "mark",
+      "task_name": "Cut wood piece wood piece",
+      "verb": "cut wood piece",
       "object": "wood piece",
-      "hand": "right",
+      "hand": "both",
       "timeline": {
-        "start_s": 118.0,
-        "end_s": 123.0,
-        "duration_s": 5.0
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
       },
-      "confidence": 0.95,
-      "description": "The worker marks the extra length on the wood piece with a pencil.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.9,
+      "confidence": 0.9,
+      "description": "The worker trims the wood piece using the electric saw.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T014",
-      "task_name": "Cut wood piece",
-      "verb": "cut",
+      "task_name": "Cut wood piece wood piece",
+      "verb": "cut wood piece",
       "object": "wood piece",
-      "hand": "right",
+      "hand": "both",
       "timeline": {
-        "start_s": 126.0,
-        "end_s": 130.0,
-        "duration_s": 4.0
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
       },
-      "confidence": 0.95,
-      "description": "The worker cuts off excess material from the wood block using the saw.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.9,
+      "confidence": 0.9,
+      "description": "The worker cuts a wood piece using the electric saw.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T015",
-      "task_name": "Cut wood piece",
-      "verb": "cut",
+      "task_name": "Align wood piece wood piece",
+      "verb": "align wood piece",
       "object": "wood piece",
-      "hand": "right",
+      "hand": "both",
       "timeline": {
-        "start_s": 138.0,
-        "end_s": 145.0,
-        "duration_s": 7.0
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
       },
-      "confidence": 0.95,
-      "description": "Worker cuts another section of wood using the portable saw.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.85,
+      "confidence": 0.85,
+      "description": "The worker positions the wood piece on the frame for fitting.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     },
     {
       "task_id": "T016",
-      "task_name": "Mark wood piece",
-      "verb": "mark",
+      "task_name": "Fasten with nail gun wood piece",
+      "verb": "fasten with nail gun",
       "object": "wood piece",
       "hand": "right",
       "timeline": {
-        "start_s": 148.0,
-        "end_s": 154.0,
-        "duration_s": 6.0
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
       },
-      "confidence": 0.95,
-      "description": "Worker marks measurements on a wood piece fitted inside the sofa frame.",
-      "evidence": "Gemini video analysis (refined)"
-    },
-    {
-      "task_id": "T017",
-      "task_name": "Fasten wood piece",
-      "verb": "fasten",
-      "object": "wood piece",
-      "hand": "right",
-      "timeline": {
-        "start_s": 161.0,
-        "end_s": 172.0,
-        "duration_s": 11.0
-      },
-      "confidence": 0.95,
-      "description": "Worker nails the wooden support block to the curved frame assembly.",
-      "evidence": "Gemini video analysis (refined)"
+      "model_confidence_score": 0.92,
+      "confidence": 0.92,
+      "description": "The worker fastens the wood piece to the frame using a pneumatic nail gun.",
+      "evidence": "Gemini video analysis (refined)",
+      "tool": null,
+      "tool_hand": null,
+      "tool_match_confidence": null,
+      "tool_association_status": "none",
+      "tool_evidence": "No PS2 tool-hold events provided"
     }
   ],
   "groups": [
     {
       "group_id": "G001",
-      "group_name": "First wooden piece preparation and installation",
+      "group_name": "Assembly and attachment of first wooden support block",
       "task_ids": [
         "T001",
         "T002",
@@ -280,35 +361,45 @@
         "T006",
         "T007"
       ],
-      "description": "Measuring, cutting, test-fitting, marking, and nailing the first wooden piece into the furniture frame structure.",
+      "description": "Measuring, trimming, marking, and securing the first internal support piece into the chair frame using a nail gun.",
       "start_s": 0.0,
-      "end_s": 63.0
+      "end_s": 103.0
     },
     {
       "group_id": "G002",
-      "group_name": "Second wooden piece preparation and installation",
+      "group_name": "Preparation and fitting of second wooden support block",
       "task_ids": [
         "T008",
         "T009",
         "T010",
-        "T011",
+        "T011"
+      ],
+      "description": "Trimming, marking, and aligning a second wooden piece to ensure a flush fit within the frame structure.",
+      "start_s": 121.0,
+      "end_s": 156.0
+    },
+    {
+      "group_id": "G003",
+      "group_name": "Final fitting and fastening of frame support",
+      "task_ids": [
         "T012",
         "T013",
         "T014",
         "T015",
-        "T016",
-        "T017"
+        "T016"
       ],
-      "description": "Aligning, trimming, marking, and fastening subsequent wooden reinforcement pieces into position.",
-      "start_s": 77.0,
-      "end_s": 172.0
+      "description": "Marking, cutting, aligning, and nailing the final support component into position.",
+      "start_s": 180.0,
+      "end_s": 180.0
     }
   ],
   "processing_metadata": {
     "model_used": "gemini-3.5-flash",
-    "segments_analyzed": 2,
-    "processing_time_s": 250.61,
+    "segments_analyzed": 1,
+    "processing_time_s": 524.06,
+    "timestamp_refinement_status": "applied",
     "timestamp_refinement_applied": true,
+    "single_request_mode": true,
     "enrichment_sources": [],
     "failed_segments": []
   }
