@@ -139,21 +139,26 @@ def process_video_to_timeline(
             refined_actions = refine_actions_pass2(
                 client, video_file, coarse_actions, config,
             )
-            refinement_status = "applied"
+            pass2_succeeded = any(getattr(a, "is_refined", False) for a in refined_actions)
+
+            # ---- 5b. Local Frame-level boundary refinement (OpenCV) ----------
+            if getattr(config, "enable_frame_refinement", False) and refined_actions:
+                from forge_trace.temporal_refiner import refine_boundaries_with_frames
+                refined_actions, frame_ref_status = refine_boundaries_with_frames(
+                    client, video_path_resolved, refined_actions, config,
+                )
+                refinement_status = frame_ref_status
+            else:
+                refinement_status = "applied" if pass2_succeeded else "failed"
         else:
             from forge_trace.temporal_refiner import _coarse_to_refined
             refined_actions = _coarse_to_refined(coarse_actions)
 
-        # ---- 5b. Local Frame-level boundary refinement (OpenCV) ----------
-        if getattr(config, "enable_frame_refinement", False) and refined_actions:
-            from forge_trace.temporal_refiner import refine_boundaries_with_frames
-            refined_actions, frame_ref_status = refine_boundaries_with_frames(
-                client, video_path_resolved, refined_actions, config,
-            )
-            refinement_status = frame_ref_status
-
         # ---- 6. Normalise & deduplicate ----------------------------------
-        cleaned_actions = normalize_and_deduplicate(refined_actions, config)
+        segment_bnds = [seg.end_s for seg in segments[:-1]] if len(segments) > 1 else []
+        cleaned_actions = normalize_and_deduplicate(
+            refined_actions, config, segment_boundaries=segment_bnds,
+        )
         logger.info(
             "After normalisation/dedup: %d actions (from %d refined)",
             len(cleaned_actions), len(refined_actions),
@@ -241,19 +246,28 @@ def process_video_to_timeline(
 # ---------------------------------------------------------------------------
 
 def _clamp_to_duration(actions, duration_s):
-    """Ensure all timestamps fall within [0, duration_s]."""
-    from forge_trace.schemas import RefinedAction
-
-    clamped = []
+    """Ensure all actions fall strictly within [0, duration_s] with positive duration.
+    Actions starting at or beyond duration_s, or collapsing to zero duration, are rejected.
+    """
+    valid = []
     for a in actions:
-        start = max(0.0, min(a.start_s, duration_s))
-        end = max(start, min(a.end_s, duration_s))
-        if end == start and a.end_s > a.start_s:
-            # Don't collapse a valid action to zero duration
-            end = min(start + 0.1, duration_s)
-        clamped.append(a.model_copy(update={
+        if a.start_s >= duration_s:
+            logger.warning(
+                "Dropping action '%s' starting at or beyond video duration (%.2f >= %.2f)",
+                a.verb, a.start_s, duration_s,
+            )
+            continue
+        start = max(0.0, a.start_s)
+        end = min(a.end_s, duration_s)
+        if end <= start:
+            logger.warning(
+                "Dropping action '%s' with non-positive duration (%.2f to %.2f)",
+                a.verb, start, end,
+            )
+            continue
+        valid.append(a.model_copy(update={
             "start_s": round(start, 2),
             "end_s": round(end, 2),
             "duration_s": round(end - start, 4),
         }))
-    return clamped
+    return valid

@@ -103,8 +103,8 @@ class TestValidateTaskRecord:
             timeline=TimelineInfo(start_s=25.0, end_s=27.0, duration_s=2.0),
             confidence=0.5,
         )
-        warnings = validate_task_record(tr, video_duration=20.0)
-        assert any("start_s" in w for w in warnings)
+        with pytest.raises(TimelineValidationError, match="start_s.*>= video duration"):
+            validate_task_record(tr, video_duration=20.0)
 
 
 class TestValidateTaskTimeline:

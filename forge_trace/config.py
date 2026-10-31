@@ -52,10 +52,10 @@ class ForgeTraceConfig:
 
     # --- Temporal refinement -----------------------------------------------
     enable_refinement: bool = True
-    enable_frame_refinement: bool = False  # Fine local frame-level boundary extraction (OpenCV)
+    enable_frame_refinement: bool = True  # Fine local frame-level boundary extraction (OpenCV)
     refinement_window_s: float = _DEFAULT_REFINEMENT_WINDOW
     refinement_step_s: float = _DEFAULT_REFINEMENT_STEP
-    max_frame_refinement_actions: int = 10
+    max_frame_refinement_actions: int = 5
 
     # --- Retry / rate-limit ------------------------------------------------
     max_retries: int = _DEFAULT_MAX_RETRIES

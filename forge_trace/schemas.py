@@ -54,9 +54,9 @@ class ActionPrediction(BaseModel):
     object: Optional[str] = None
     hand: Optional[str] = None
     start_s: float = Field(..., ge=0)
-    end_s: float = Field(..., ge=0)
+    end_s: float = Field(..., gt=0)
     model_confidence_score: float = Field(0.5, ge=0.0, le=1.0, description="Model self-reported confidence score (uncalibrated)")
-    confidence: float = Field(0.5, ge=0.0, le=1.0, description="Alias for model_confidence_score")
+    confidence: Optional[float] = Field(default=None, exclude=True, description="Alias for model_confidence_score (excluded from serialization)")
     description: str = ""
     evidence: str = "Visual observation"
     segment_index: Optional[int] = None
@@ -65,20 +65,22 @@ class ActionPrediction(BaseModel):
     @classmethod
     def _sync_confidence_input(cls, data: Any) -> Any:
         if isinstance(data, dict):
-            if "model_confidence_score" in data and "confidence" not in data:
+            if "model_confidence_score" in data and ("confidence" not in data or data.get("confidence") is None):
                 data["confidence"] = data["model_confidence_score"]
-            elif "confidence" in data and "model_confidence_score" not in data:
+            elif "confidence" in data and ("model_confidence_score" not in data or data.get("model_confidence_score") is None):
                 data["model_confidence_score"] = data["confidence"]
         return data
 
     @model_validator(mode="after")
     def _check_times(self) -> "ActionPrediction":
-        if self.end_s < self.start_s:
+        if self.start_s < 0:
+            raise ValueError(f"start_s ({self.start_s}) cannot be negative")
+        if self.end_s <= self.start_s:
             raise ValueError(
-                f"end_s ({self.end_s}) must be >= start_s ({self.start_s})"
+                f"end_s ({self.end_s}) must be strictly greater than start_s ({self.start_s})"
             )
         # Ensure mutual sync
-        if self.model_confidence_score != self.confidence:
+        if self.confidence is None or self.confidence != self.model_confidence_score:
             object.__setattr__(self, "confidence", self.model_confidence_score)
         return self
 
@@ -108,31 +110,39 @@ class RefinedAction(BaseModel):
     object: Optional[str] = None
     hand: Optional[str] = None
     start_s: float = Field(..., ge=0)
-    end_s: float = Field(..., ge=0)
-    duration_s: float = Field(..., ge=0)
+    end_s: float = Field(..., gt=0)
+    duration_s: float = Field(..., gt=0)
     model_confidence_score: float = Field(0.5, ge=0.0, le=1.0, description="Model self-reported confidence score (uncalibrated)")
-    confidence: float = Field(0.5, ge=0.0, le=1.0, description="Alias for model_confidence_score")
+    confidence: Optional[float] = Field(default=None, exclude=True, description="Alias for model_confidence_score (excluded from serialization)")
     description: str = ""
     evidence: str = "Visual observation"
     start_uncertainty_s: float = Field(0.0, ge=0)
     end_uncertainty_s: float = Field(0.0, ge=0)
     is_refined: bool = False
+    tool: Optional[str] = None
+    tool_hint: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
     def _sync_confidence_input(cls, data: Any) -> Any:
         if isinstance(data, dict):
-            if "model_confidence_score" in data and "confidence" not in data:
+            if "model_confidence_score" in data and ("confidence" not in data or data.get("confidence") is None):
                 data["confidence"] = data["model_confidence_score"]
-            elif "confidence" in data and "model_confidence_score" not in data:
+            elif "confidence" in data and ("model_confidence_score" not in data or data.get("model_confidence_score") is None):
                 data["model_confidence_score"] = data["confidence"]
         return data
 
     @model_validator(mode="after")
     def _check_times(self) -> "RefinedAction":
-        if self.end_s < self.start_s:
-            raise ValueError("end_s must be >= start_s")
-        if self.model_confidence_score != self.confidence:
+        if self.start_s < 0:
+            raise ValueError(f"start_s ({self.start_s}) cannot be negative")
+        if self.end_s <= self.start_s:
+            raise ValueError(
+                f"end_s ({self.end_s}) must be strictly greater than start_s ({self.start_s})"
+            )
+        if self.duration_s <= 0:
+            raise ValueError("duration_s must be strictly positive")
+        if self.confidence is None or self.confidence != self.model_confidence_score:
             object.__setattr__(self, "confidence", self.model_confidence_score)
         return self
 
@@ -145,13 +155,19 @@ class TimelineInfo(BaseModel):
     """Start, end and duration of a task."""
 
     start_s: float = Field(..., ge=0)
-    end_s: float = Field(..., ge=0)
-    duration_s: float = Field(..., ge=0)
+    end_s: float = Field(..., gt=0)
+    duration_s: float = Field(..., gt=0)
 
     @model_validator(mode="after")
     def _validate(self) -> "TimelineInfo":
-        if self.end_s < self.start_s:
-            raise ValueError("end_s must be >= start_s")
+        if self.start_s < 0:
+            raise ValueError(f"start_s ({self.start_s}) cannot be negative")
+        if self.end_s <= self.start_s:
+            raise ValueError(
+                f"end_s ({self.end_s}) must be strictly greater than start_s ({self.start_s})"
+            )
+        if self.duration_s <= 0:
+            raise ValueError("duration_s must be strictly positive (zero-duration tasks rejected)")
         expected = round(self.end_s - self.start_s, 4)
         if abs(self.duration_s - expected) > 0.05:
             raise ValueError(
@@ -169,8 +185,8 @@ class TaskRecord(BaseModel):
     object: str = Field(default="unknown")
     hand: str = Field(default="unknown")
     timeline: TimelineInfo
-    model_confidence_score: float = Field(default=0.5, ge=0.0, le=1.0, description="Model self-reported confidence score (uncalibrated)")
-    confidence: float = Field(default=0.5, ge=0.0, le=1.0, description="Alias for model_confidence_score")
+    model_confidence_score: float = Field(default=0.5, ge=0.0, le=1.0, description="Model self-reported confidence score (uncalibrated), not measured accuracy")
+    confidence: Optional[float] = Field(default=None, exclude=True, description="Deprecated alias for model_confidence_score (excluded from serialized JSON)")
     description: str = ""
     evidence: str = "Visual observation"
 
@@ -185,15 +201,15 @@ class TaskRecord(BaseModel):
     @classmethod
     def _sync_confidence_input(cls, data: Any) -> Any:
         if isinstance(data, dict):
-            if "model_confidence_score" in data and "confidence" not in data:
+            if "model_confidence_score" in data and ("confidence" not in data or data.get("confidence") is None):
                 data["confidence"] = data["model_confidence_score"]
-            elif "confidence" in data and "model_confidence_score" not in data:
+            elif "confidence" in data and ("model_confidence_score" not in data or data.get("model_confidence_score") is None):
                 data["model_confidence_score"] = data["confidence"]
         return data
 
     @model_validator(mode="after")
     def _sync_confidence(self) -> "TaskRecord":
-        if self.model_confidence_score != self.confidence:
+        if self.confidence is None or self.model_confidence_score != self.confidence:
             object.__setattr__(self, "confidence", self.model_confidence_score)
         return self
 

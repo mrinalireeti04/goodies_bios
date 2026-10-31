@@ -32,14 +32,23 @@ video and identify every **distinct action** the worker performs.
 RULES — read carefully:
 1. Report each individual action instance separately, even if the same type \
 of action is repeated.
+   For example, if a worker fastens multiple joints or repeatedly nails/fastens \
+at different positions (even in sequence), report each distinct fastening cycle \
+separately (e.g. 51s-62s, 64s-75s, 78s-92s). Do NOT merge repeated actions \
+into a single massive multi-minute block.
 2. Do NOT merge several steps into one high-level summary.
-3. A single continuous motion (e.g. sliding a component along a rail) is ONE \
-action — do not split it into micro-movements.
+3. A single continuous motion (e.g. sliding a component along a rail or cutting a line) \
+is ONE action — do not split it into micro-movements. However, distinct action cycles \
+(repositioning, moving to a new joint, separate cuts or marks) are separate actions.
 4. If the worker holds an object while performing a different action, the \
 holding and the other action are separate only when they are distinct tasks.
 5. Do NOT invent actions that are not clearly visible in the video.
 6. Provide approximate start and end timestamps in **seconds** from the \
 beginning of the video.{time_range_note}
+   CRITICAL: Every action must begin and finish strictly within the visible video recording.
+   Do NOT report actions at or beyond the end of the video.
+   Every action must have start_s strictly less than end_s (minimum duration 0.5s).
+   Zero-duration actions (start_s == end_s) are strictly invalid.
    NOTE: Model operates at ~1 FPS sampling; timestamps represent approximate \
 semantic action boundaries, not frame-exact boundaries.
 7. If you cannot determine the object or hand, set the field to null.
@@ -47,7 +56,7 @@ semantic action boundaries, not frame-exact boundaries.
 obstructed or the action is ambiguous. This is an uncalibrated self-reported score, not a calibrated probability.
 
 For each action return a JSON object with these fields:
-  verb                   – the action verb phrase (e.g. "pick up", "fasten", "align")
+  verb                   – normalized action verb ONLY (e.g. "pick up", "place", "align", "cut", "mark", "fasten"). Do NOT include object or tool in verb!
   object                 – the object involved, or null
   hand                   – "left", "right", "both", or null
   start_s                – approximate start time in seconds
@@ -118,8 +127,20 @@ def parse_action_list(
             logger.warning("Action entry %d is not a dict — skipping", idx)
             continue
         try:
-            raw_start = float(entry.get("start_s", 0))
-            raw_end = float(entry.get("end_s", 0))
+            if "start_s" not in entry or "end_s" not in entry or entry["start_s"] is None or entry["end_s"] is None:
+                logger.warning("Action entry %d missing start_s or end_s — skipping", idx)
+                continue
+
+            raw_start = float(entry["start_s"])
+            raw_end = float(entry["end_s"])
+
+            if raw_start < 0.0 or raw_end < 0.0:
+                logger.warning("Action entry %d has negative timestamp (start=%.2f, end=%.2f) — skipping", idx, raw_start, raw_end)
+                continue
+
+            if raw_start >= raw_end:
+                logger.warning("Action entry %d has start_s >= end_s (start=%.2f, end=%.2f) — skipping", idx, raw_start, raw_end)
+                continue
 
             # Consistent timestamp convention:
             # If segment start > 0 and raw_start is already within [segment.start_s - 1.0, segment.end_s + 5.0],
@@ -136,11 +157,24 @@ def parse_action_list(
                 start = raw_start
                 end = raw_end
 
-            # Clamp end to segment boundary if applicable
-            if seg_end is not None:
-                end = min(end, seg_end)
-            if end < start:
-                end = start  # degenerate; will be filtered later
+            # Reject actions starting at or beyond segment boundary / video duration
+            if seg_end is not None and start >= seg_end:
+                logger.warning(
+                    "Action entry %d starts at or beyond boundary (start=%.2f >= seg_end=%.2f) — skipping",
+                    idx, start, seg_end,
+                )
+                continue
+
+            # Clamp end to segment boundary if applicable, ensuring duration remains valid
+            if seg_end is not None and end > seg_end:
+                end = seg_end
+
+            if end <= start:
+                logger.warning(
+                    "Action entry %d has zero or negative duration after clamping (%.2f to %.2f) — skipping",
+                    idx, start, end,
+                )
+                continue
 
             verb = str(entry.get("verb", "")).strip()
             if not verb:

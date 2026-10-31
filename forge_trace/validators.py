@@ -126,31 +126,40 @@ def validate_enrichment_events(
 # ---------------------------------------------------------------------------
 
 def validate_task_record(task: TaskRecord, video_duration: float) -> List[str]:
-    """Return a list of warnings (empty if the record is valid)."""
+    """Validate a single task record. Raises TimelineValidationError on critical flaws."""
     warnings: List[str] = []
 
-    if task.timeline.start_s > video_duration:
-        warnings.append(
-            f"{task.task_id}: start_s ({task.timeline.start_s}) > "
-            f"video duration ({video_duration})"
+    if task.timeline.start_s < 0.0 or task.timeline.end_s < 0.0:
+        raise TimelineValidationError(
+            f"{task.task_id}: negative timestamp not allowed (start={task.timeline.start_s}, end={task.timeline.end_s})"
         )
-    if task.timeline.end_s > video_duration + 0.5:
-        warnings.append(
-            f"{task.task_id}: end_s ({task.timeline.end_s}) > "
-            f"video duration ({video_duration})"
+
+    if task.timeline.start_s >= task.timeline.end_s:
+        raise TimelineValidationError(
+            f"{task.task_id}: invalid interval: start_s ({task.timeline.start_s}) >= end_s ({task.timeline.end_s})"
         )
-    if task.timeline.start_s > task.timeline.end_s:
-        warnings.append(
-            f"{task.task_id}: start_s > end_s "
-            f"({task.timeline.start_s} > {task.timeline.end_s})"
+
+    if task.timeline.duration_s <= 0.0:
+        raise TimelineValidationError(
+            f"{task.task_id}: zero-duration task rejected (duration={task.timeline.duration_s})"
+        )
+
+    if task.timeline.start_s >= video_duration:
+        raise TimelineValidationError(
+            f"{task.task_id}: start_s ({task.timeline.start_s}) >= video duration ({video_duration})"
+        )
+
+    if task.timeline.end_s > video_duration + 0.05:
+        raise TimelineValidationError(
+            f"{task.task_id}: end_s ({task.timeline.end_s}) exceeds video duration ({video_duration})"
         )
 
     expected_dur = round(task.timeline.end_s - task.timeline.start_s, 4)
     if abs(task.timeline.duration_s - expected_dur) > 0.05:
-        warnings.append(
-            f"{task.task_id}: duration mismatch "
-            f"(expected {expected_dur}, got {task.timeline.duration_s})"
+        raise TimelineValidationError(
+            f"{task.task_id}: duration mismatch (expected {expected_dur}, got {task.timeline.duration_s})"
         )
+
     return warnings
 
 

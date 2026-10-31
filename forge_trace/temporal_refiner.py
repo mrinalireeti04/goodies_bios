@@ -157,10 +157,14 @@ def _parse_refined_list(
             if not verb:
                 continue
 
-            start = round(float(entry.get("start_s", 0)), 2)
-            end = round(float(entry.get("end_s", 0)), 2)
-            if end < start:
-                end = start
+            if "start_s" not in entry or "end_s" not in entry or entry["start_s"] is None or entry["end_s"] is None:
+                continue
+
+            start = round(float(entry["start_s"]), 2)
+            end = round(float(entry["end_s"]), 2)
+            if start < 0.0 or end < 0.0 or end <= start:
+                logger.warning("Refinement entry %d has invalid interval (%.2f to %.2f) — skipping", idx, start, end)
+                continue
             raw_conf = entry.get("model_confidence_score")
             if raw_conf is None:
                 raw_conf = entry.get("confidence", 0.5)
@@ -326,23 +330,34 @@ def refine_boundaries_with_frames(
             new_end = refine_boundary_with_frames(
                 client, video_path, action, "end", config,
             )
-            if new_end < new_start:
-                new_end = new_start
-
-            if new_start != start_ts or new_end != end_ts:
-                action_succeeded = True
+            if new_end <= new_start:
+                logger.warning(
+                    "Frame refinement resulted in invalid boundary (start=%.2f, end=%.2f); retaining coarse",
+                    new_start, new_end,
+                )
+                new_start = start_ts
+                new_end = end_ts
+            else:
+                if new_start != start_ts or new_end != end_ts:
+                    action_succeeded = True
 
             dur = round(new_end - new_start, 4)
+            is_ref = action.is_refined or action_succeeded
+            ev = f"{action.evidence}; frame-boundary refined" if action_succeeded else action.evidence
             refined_results.append(
                 action.model_copy(update={
                     "start_s": new_start,
                     "end_s": new_end,
                     "duration_s": dur,
-                    "is_refined": True,
-                    "evidence": f"{action.evidence}; frame-boundary refined",
+                    "is_refined": is_ref,
+                    "evidence": ev,
                 })
             )
-            succeeded += 1
+            if action_succeeded:
+                succeeded += 1
+            else:
+                # If neither boundary changed, count as failure to refine
+                failed += 1
         except Exception as exc:
             logger.warning("Frame refinement error for action '%s': %s", action.verb, exc)
             failed += 1

@@ -43,10 +43,18 @@ def assign_task_ids(
         task_name = _build_task_name(action)
         duration = round(action.end_s - action.start_s, 4)
 
+        # Ensure verb contains only the normalized action verb
+        clean_verb = action.verb.split(" with ")[0].strip()
+        if action.object and action.object.lower() in clean_verb.lower():
+            import re
+            clean_verb = re.sub(rf"\b{re.escape(action.object)}\b", "", clean_verb, flags=re.IGNORECASE).strip()
+        if not clean_verb:
+            clean_verb = action.verb
+
         record = TaskRecord(
             task_id=task_id,
             task_name=task_name,
-            verb=action.verb,
+            verb=clean_verb.lower(),
             object=action.object if action.object else "unknown",
             hand=action.hand if action.hand else "unknown",
             timeline=TimelineInfo(
@@ -55,7 +63,7 @@ def assign_task_ids(
                 duration_s=duration,
             ),
             model_confidence_score=getattr(action, "model_confidence_score", action.confidence),
-            confidence=action.confidence,
+            confidence=getattr(action, "model_confidence_score", action.confidence),
             description=action.description or task_name,
             evidence=action.evidence,
         )
@@ -250,7 +258,35 @@ def _make_group(tasks: List[TaskRecord], group_num: int) -> TaskGroup:
 # ---------------------------------------------------------------------------
 
 def _build_task_name(action: RefinedAction) -> str:
-    """Create a human-readable task name from verb + object."""
-    verb = action.verb.capitalize()
-    obj = action.object if action.object else "object"
-    return f"{verb} {obj}"
+    """Create a human-readable task name consistently from verb + object (+ tool if present)."""
+    import re
+    raw_verb = action.verb.strip()
+    obj = action.object.strip() if action.object else "object"
+
+    # Strip any " with <tool>" from verb
+    clean_verb = raw_verb
+    if " with " in clean_verb:
+        clean_verb = clean_verb.split(" with ")[0].strip()
+
+    # If the object was duplicated in the verb string (e.g. "align wood piece"), strip it
+    if obj.lower() != "object" and obj.lower() in clean_verb.lower():
+        pattern = re.compile(rf"\b{re.escape(obj)}\b", re.IGNORECASE)
+        clean_verb = pattern.sub("", clean_verb).strip()
+
+    if not clean_verb:
+        clean_verb = raw_verb
+
+    verb_cap = clean_verb.capitalize()
+
+    # Determine tool (from action.tool or action.tool_hint or 'with' in raw_verb)
+    tool = getattr(action, "tool", None)
+    tool_hint = getattr(action, "tool_hint", None)
+    if not tool and not tool_hint and " with " in raw_verb:
+        tool_hint = raw_verb.split(" with ", 1)[1].strip()
+
+    tool_str = tool or tool_hint
+    if tool_str:
+        clean_tool = re.sub(r"^(a|an|the|pneumatic)\s+", "", tool_str.strip(), flags=re.IGNORECASE)
+        return f"{verb_cap} {obj} with {clean_tool}"
+
+    return f"{verb_cap} {obj}"

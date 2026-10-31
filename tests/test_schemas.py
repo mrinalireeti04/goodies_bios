@@ -48,7 +48,7 @@ class TestActionPrediction:
         assert ap.hand is None
 
     def test_end_before_start_rejected(self):
-        with pytest.raises(ValidationError, match="end_s.*must be >= start_s"):
+        with pytest.raises(ValidationError, match="end_s.*must be .*greater than start_s"):
             ActionPrediction(verb="pick up", start_s=5.0, end_s=3.0)
 
     def test_confidence_clamped(self):

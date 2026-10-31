@@ -144,8 +144,9 @@ def normalize_actions(
     """Normalise verb strings across all actions for consistency."""
     normalised: List[RefinedAction] = []
     for a in actions:
+        tool_hint = getattr(a, "tool_hint", None) or _extract_tool_hint(a.verb)
         verb = _normalise_verb(a.verb)
-        normalised.append(a.model_copy(update={"verb": verb}))
+        normalised.append(a.model_copy(update={"verb": verb, "tool_hint": tool_hint}))
     return normalised
 
 
@@ -216,15 +217,15 @@ def merge_duplicate_actions(
 def merge_cross_segment_actions(
     actions: List[RefinedAction],
     overlap_s: float,
+    single_request_mode: bool = False,
+    segment_boundaries: Optional[List[float]] = None,
 ) -> List[RefinedAction]:
     """Merge actions that were split across overlapping segment boundaries.
 
-    Two actions are candidates for cross-boundary merge when:
-    - They have the same verb (and optionally same object).
-    - One action ends within the overlap region and the other starts there.
-    - Their combined span is continuous.
+    In single_request_mode or when no boundaries are crossed, actions are not
+    merged, avoiding artificial merging of distinct repeated actions.
     """
-    if len(actions) <= 1 or overlap_s <= 0:
+    if len(actions) <= 1 or overlap_s <= 0 or single_request_mode:
         return list(actions)
 
     sorted_actions = sorted(actions, key=lambda a: a.start_s)
@@ -242,6 +243,14 @@ def merge_cross_segment_actions(
             if b.start_s > current.end_s + overlap_s:
                 break
             if _same_action_type(current, b):
+                # If explicit segment boundaries are given, require the merge to cross a boundary
+                if segment_boundaries:
+                    straddles = any(
+                        abs(current.end_s - bnd) <= overlap_s + 1.0 and abs(b.start_s - bnd) <= overlap_s + 1.0
+                        for bnd in segment_boundaries
+                    )
+                    if not straddles:
+                        continue
                 overlap = current.end_s - b.start_s
                 # Must overlap in time (or be immediately contiguous within 1.0s)
                 if overlap >= -1.0 and overlap <= overlap_s + 1.0:
@@ -261,22 +270,84 @@ def merge_cross_segment_actions(
 def normalize_and_deduplicate(
     actions: List[RefinedAction],
     config: ForgeTraceConfig,
+    segment_boundaries: Optional[List[float]] = None,
 ) -> List[RefinedAction]:
     """Full normalisation + deduplication pipeline."""
-    actions = normalize_actions(actions)
-    actions = merge_cross_segment_actions(actions, config.segment_overlap_s)
+    # 1. Filter out invalid/degenerate intervals early
+    valid_actions = [
+        a for a in actions
+        if a.start_s >= 0.0 and a.end_s > a.start_s and a.duration_s > 0.0
+    ]
+    # 2. Normalise verbs
+    actions = normalize_actions(valid_actions)
+    # 3. Cross-segment merge (skipped in single-request mode)
+    is_single_req = getattr(config, "single_request_mode", False)
+    if not is_single_req and config.segment_overlap_s > 0:
+        actions = merge_cross_segment_actions(
+            actions,
+            overlap_s=config.segment_overlap_s,
+            single_request_mode=False,
+            segment_boundaries=segment_boundaries,
+        )
+    # 4. Duplicate removal (high IoU duplicates only)
     actions = merge_duplicate_actions(actions, config)
+    # 5. Low-confidence filter
     actions = filter_low_confidence(actions, config)
-    return sorted(actions, key=lambda a: a.start_s)
+    # 6. Ensure all remaining actions have strictly positive durations
+    final_actions = [
+        a for a in actions
+        if a.start_s >= 0.0 and a.end_s > a.start_s and a.duration_s > 0.0
+    ]
+    return sorted(final_actions, key=lambda a: (a.start_s, a.end_s))
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+_CORE_VERBS = [
+    "pick up", "place", "move", "position", "align", "hold",
+    "fasten", "cut", "mark", "press", "open", "close",
+    "inspect", "release", "rotate", "flip", "insert",
+    "remove", "attach", "wipe", "apply", "reach", "adjust",
+]
+
+
+def _extract_tool_hint(verb: str) -> Optional[str]:
+    v = verb.strip().lower()
+    if " with " in v:
+        parts = v.split(" with ", 1)
+        tool_part = parts[1].strip()
+        # Clean up any trailing object or punctuation
+        return tool_part
+    return None
+
+
 def _normalise_verb(verb: str) -> str:
     v = verb.strip().lower()
-    return _VERB_ALIASES.get(v, v)
+    if v in _VERB_ALIASES:
+        return _VERB_ALIASES[v]
+
+    # Strip any " with <tool>"
+    if " with " in v:
+        v_base = v.split(" with ")[0].strip()
+        if v_base in _VERB_ALIASES:
+            return _VERB_ALIASES[v_base]
+        if v_base in _CORE_VERBS:
+            return v_base
+        v = v_base
+
+    # Check for core verbs as prefix (e.g. "align wood piece", "cut wood piece", "mark wood piece")
+    for root in sorted(_CORE_VERBS, key=len, reverse=True):
+        if v == root or v.startswith(root + " ") or v.startswith(root + "_") or v.startswith(root + "-"):
+            return root
+
+    # Check for alias roots as prefix (e.g. "picks up bolt", "cuts wood piece")
+    for alias, target in sorted(_VERB_ALIASES.items(), key=lambda x: len(x[0]), reverse=True):
+        if v == alias or v.startswith(alias + " ") or v.startswith(alias + "_") or v.startswith(alias + "-"):
+            return target
+
+    return v
 
 
 def _same_action_type(a: RefinedAction, b: RefinedAction) -> bool:
