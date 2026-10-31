@@ -1,0 +1,23 @@
+# Environment and credentials
+.env
+.env.*
+!.env.example
+
+# Large sample media files (>100MB rejected by GitHub)
+sample_videos/
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+.venv/
+env/

@@ -1,0 +1,28 @@
+[project]
+name = "forge-trace"
+version = "0.1.0"
+description = "FORGE TRACE — Egocentric factory video understanding: Task Intelligence and Timeline Generation Module"
+requires-python = ">=3.10"
+dependencies = [
+    "google-generativeai>=0.8.0",
+    "opencv-python>=4.8.0",
+    "pydantic>=2.0.0",
+    "tenacity>=8.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

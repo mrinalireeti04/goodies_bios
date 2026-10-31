@@ -1,0 +1,315 @@
+{
+  "clip_id": "MTL-SGF00106-028",
+  "video_path": "D:\\goodies_bios\\sample_videos\\MTL-SGF00106-028.mp4",
+  "video_duration": 180.0,
+  "total_tasks": 17,
+  "unique_task_types": 4,
+  "unique_task_list": [
+    "Align wood piece",
+    "Cut wood piece",
+    "Fasten wood piece",
+    "Mark wood piece"
+  ],
+  "tasks": [
+    {
+      "task_id": "T001",
+      "task_name": "Align wood piece",
+      "verb": "align",
+      "object": "wood piece",
+      "hand": "both",
+      "timeline": {
+        "start_s": 0.0,
+        "end_s": 5.0,
+        "duration_s": 5.0
+      },
+      "confidence": 0.95,
+      "description": "The worker aligns a wooden block inside the frame of a chair.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T002",
+      "task_name": "Cut wood piece",
+      "verb": "cut",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 7.0,
+        "end_s": 9.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "The worker cuts a small piece of wood using a table circular saw.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T003",
+      "task_name": "Align wood piece",
+      "verb": "align",
+      "object": "wood piece",
+      "hand": "both",
+      "timeline": {
+        "start_s": 10.0,
+        "end_s": 13.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "The worker checks the alignment of the cut wood piece inside the chair frame.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T004",
+      "task_name": "Cut wood piece",
+      "verb": "cut",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 22.0,
+        "end_s": 24.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "The worker trims the wood piece using a circular saw.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T005",
+      "task_name": "Mark wood piece",
+      "verb": "mark",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 26.0,
+        "end_s": 30.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.95,
+      "description": "The worker uses a pencil to mark the cutting reference line on the fitted wood piece.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T006",
+      "task_name": "Fasten wood piece",
+      "verb": "fasten",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 37.0,
+        "end_s": 43.0,
+        "duration_s": 6.0
+      },
+      "confidence": 0.95,
+      "description": "The worker uses a pneumatic nail gun to fasten the wood block into the frame.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T007",
+      "task_name": "Fasten wood piece",
+      "verb": "fasten",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 51.0,
+        "end_s": 63.0,
+        "duration_s": 12.0
+      },
+      "confidence": 0.95,
+      "description": "The worker continues securing the wood piece with the nail gun at different angles.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T008",
+      "task_name": "Align wood piece",
+      "verb": "align",
+      "object": "wood piece",
+      "hand": "both",
+      "timeline": {
+        "start_s": 77.0,
+        "end_s": 80.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.9,
+      "description": "Worker aligns a wooden block inside the sofa frame structure to check the fit.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T009",
+      "task_name": "Cut wood piece",
+      "verb": "cut",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 81.0,
+        "end_s": 84.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker cuts the wooden piece using a hand-held circular saw.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T010",
+      "task_name": "Mark wood piece",
+      "verb": "mark",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 86.0,
+        "end_s": 90.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.95,
+      "description": "Worker marks the wood piece with a pencil while holding it against the frame.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T011",
+      "task_name": "Cut wood piece",
+      "verb": "cut",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 92.0,
+        "end_s": 95.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "The worker cuts the wood piece along the marked line with the circular saw.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T012",
+      "task_name": "Align wood piece",
+      "verb": "align",
+      "object": "wood piece",
+      "hand": "both",
+      "timeline": {
+        "start_s": 96.0,
+        "end_s": 116.0,
+        "duration_s": 20.0
+      },
+      "confidence": 0.95,
+      "description": "The worker test-fits the freshly cut wood block into the chair frame.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T013",
+      "task_name": "Mark wood piece",
+      "verb": "mark",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 118.0,
+        "end_s": 123.0,
+        "duration_s": 5.0
+      },
+      "confidence": 0.95,
+      "description": "The worker marks the extra length on the wood piece with a pencil.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T014",
+      "task_name": "Cut wood piece",
+      "verb": "cut",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 126.0,
+        "end_s": 130.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.95,
+      "description": "The worker cuts off excess material from the wood block using the saw.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T015",
+      "task_name": "Cut wood piece",
+      "verb": "cut",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 138.0,
+        "end_s": 145.0,
+        "duration_s": 7.0
+      },
+      "confidence": 0.95,
+      "description": "Worker cuts another section of wood using the portable saw.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T016",
+      "task_name": "Mark wood piece",
+      "verb": "mark",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 148.0,
+        "end_s": 154.0,
+        "duration_s": 6.0
+      },
+      "confidence": 0.95,
+      "description": "Worker marks measurements on a wood piece fitted inside the sofa frame.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T017",
+      "task_name": "Fasten wood piece",
+      "verb": "fasten",
+      "object": "wood piece",
+      "hand": "right",
+      "timeline": {
+        "start_s": 161.0,
+        "end_s": 172.0,
+        "duration_s": 11.0
+      },
+      "confidence": 0.95,
+      "description": "Worker nails the wooden support block to the curved frame assembly.",
+      "evidence": "Gemini video analysis (refined)"
+    }
+  ],
+  "groups": [
+    {
+      "group_id": "G001",
+      "group_name": "First wooden piece preparation and installation",
+      "task_ids": [
+        "T001",
+        "T002",
+        "T003",
+        "T004",
+        "T005",
+        "T006",
+        "T007"
+      ],
+      "description": "Measuring, cutting, test-fitting, marking, and nailing the first wooden piece into the furniture frame structure.",
+      "start_s": 0.0,
+      "end_s": 63.0
+    },
+    {
+      "group_id": "G002",
+      "group_name": "Second wooden piece preparation and installation",
+      "task_ids": [
+        "T008",
+        "T009",
+        "T010",
+        "T011",
+        "T012",
+        "T013",
+        "T014",
+        "T015",
+        "T016",
+        "T017"
+      ],
+      "description": "Aligning, trimming, marking, and fastening subsequent wooden reinforcement pieces into position.",
+      "start_s": 77.0,
+      "end_s": 172.0
+    }
+  ],
+  "processing_metadata": {
+    "model_used": "gemini-3.5-flash",
+    "segments_analyzed": 2,
+    "processing_time_s": 250.61,
+    "timestamp_refinement_applied": true,
+    "enrichment_sources": [],
+    "failed_segments": []
+  }
+}
