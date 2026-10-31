@@ -3,6 +3,7 @@ data/
 out/
 out_rtm/
 out_rtm2/
+bench_out/
 *.mp4
 *.avi
 *.mov
