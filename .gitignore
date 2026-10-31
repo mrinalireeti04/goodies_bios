@@ -1,0 +1,25 @@
+# Private footage and everything derived from it. Never commit these.
+data/
+out/
+*.mp4
+*.avi
+*.mov
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Model file (downloaded separately, see README)
+*.task
+
+# Python and tooling
+__pycache__/
+*.pyc
+.venv/
+venv/
+egohack/
+.pytest_cache/
+
+# Secrets and logs
+.env
+*.log
