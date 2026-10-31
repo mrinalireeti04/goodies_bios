@@ -11,4 +11,5 @@ export async function apiFetch(path, options={}){
     return response.status===204?null:response.json();
   }finally{clearTimeout(timer);}
 }
-export const useRealApi = import.meta.env.VITE_USE_REAL_API==='true';
+export const useRealApi = import.meta.env.VITE_USE_REAL_API!=='false';
+export const mediaUrl = (jobId, kind='media') => `${BASE}/api/clips/${encodeURIComponent(jobId)}/${kind}`;

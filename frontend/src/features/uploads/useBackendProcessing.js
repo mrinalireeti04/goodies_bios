@@ -2,6 +2,7 @@ import {useMutation,useQueryClient} from '@tanstack/react-query';
 import {createJob,waitForJob,loadJobResults} from '@/services/jobService';
 import {useMediaStore} from '@/stores/useMediaStore';
 import {useInferenceStore} from '@/stores/useInferenceStore';
+import {mediaUrl} from '@/services/apiClient';
 
 /** Optional server processing; frontend-only preview remains the default. */
 export function useBackendProcessing(){
@@ -27,7 +28,9 @@ export function useBackendProcessing(){
       try{
         if(parsed.length)useInferenceStore.getState().importForClip(clip.id,parsed);
         useMediaStore.getState().updateClip(clip.id,{
-          status:final.status,issues:final.issues||[],modules:final.completed_modules||[]
+          status:final.status,issues:final.issues||[],modules:final.completed_modules||[],
+          originalUrl:mediaUrl(final.job_id),
+          overlayUrl:final.completed_modules?.includes('ps1')?mediaUrl(final.job_id,'overlay'):null
         });
         queryClient.invalidateQueries({queryKey:['clips']});
       }catch(err){
