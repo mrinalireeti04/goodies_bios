@@ -24,6 +24,20 @@ MAX_BYTES = 800 * 1024 * 1024
 JOBS: dict[str, dict[str, Any]] = {}
 LOCK = threading.RLock()
 
+# Recover completed local jobs; interrupted work is explicitly failed, never replayed.
+for metadata in DATA_DIR.glob('*/job.json'):
+    try:
+        saved = json.loads(metadata.read_text())
+        candidates = list(metadata.parent.glob('input.*'))
+        if not candidates:
+            continue
+        saved.update(path=candidates[0], directory=metadata.parent)
+        if saved['status'] in ('queued','processing'):
+            saved.update(status='failed', issues=['Processing interrupted; upload again to retry.'])
+        JOBS[saved['job_id']] = saved
+    except (ValueError, KeyError, OSError):
+        continue
+
 app = FastAPI(title='FORGE Studio local API', version='0.1.0')
 app.add_middleware(CORSMiddleware, allow_origins=['http://127.0.0.1:5173', 'http://localhost:5173'], allow_credentials=False, allow_methods=['GET','POST','PATCH','DELETE'], allow_headers=['Content-Type'])
 
@@ -43,6 +57,10 @@ def put(job_id: str, **kwargs):
     with LOCK:
         if job_id in JOBS:
             JOBS[job_id].update(kwargs)
+            job = JOBS[job_id]
+            temporary = job['directory']/'job.tmp'
+            temporary.write_text(json.dumps(public_job(job)))
+            temporary.replace(job['directory']/'job.json')
 
 
 def process_job(job_id: str):
@@ -60,10 +78,9 @@ def process_job(job_id: str):
     outputs: dict[str, str] = {}
     issues: list[str] = []
     stages = [
-        ('ps1','modules.ps1','run_ps1', lambda: (input_path, output_dir)),
+        ('ps1','backend.inference.pipeline','run_ps1', lambda: (input_path, output_dir)),
         ('ps2','modules.ps2','run_ps2', lambda: (input_path, Path(outputs['ps1']), output_dir)),
         ('ps3','modules.ps3','run_ps3', lambda: (input_path, Path(outputs['ps1']), Path(outputs['ps2']), output_dir)),
-        ('ps4','modules.ps4','run_ps4', lambda: (Path(outputs['ps1']), output_dir)),
     ]
     put(job_id, status='processing')
     for name, module_name, func_name, args_fn in stages:
@@ -83,10 +100,12 @@ def process_job(job_id: str):
             if not result.is_relative_to(output_dir.resolve()) or not result.is_file():
                 raise ValueError('Module must return an existing private output file')
             outputs[name] = str(result)
+            if name == 'ps1' and (output_dir/'ps4.json').is_file():
+                outputs['ps4'] = str(output_dir/'ps4.json')
             put(job_id, completed_modules=sorted(outputs))
         except Exception as exc:
             issues.append(f'{name}: {type(exc).__name__}: {str(exc)[:160]}')
-    put(job_id, status='completed' if len(outputs)==4 else 'partial', completed_modules=sorted(outputs), issues=issues)
+    put(job_id, status='completed' if {'ps1','ps4'} <= outputs.keys() else 'failed', completed_modules=sorted(outputs), issues=issues)
 
 
 @app.get('/api/health')
@@ -124,6 +143,7 @@ async def submit_job(background_tasks: BackgroundTasks, file: UploadFile = File(
            'status':'queued','completed_modules':[],'issues':[], 'path':path,'directory':directory}
     with LOCK:
         JOBS[job_id]=job
+    put(job_id)
     background_tasks.add_task(process_job, job_id)
     return public_job(job)
 
@@ -153,6 +173,15 @@ def get_media(job_id: str):
 ROUTE_FILES={'hands':('ps1','hands.jsonl'),'contacts':('ps2','ps2.json'), 'actions':('ps3','actions.json'), 'pose3d':('ps4','ps4.json')}
 
 
+@app.get('/api/clips/{job_id}/overlay')
+def get_overlay(job_id: str):
+    job = get_job(job_id)
+    path = job['directory']/'results'/'overlay.mp4'
+    if 'ps1' not in job['completed_modules'] or not path.is_file():
+        raise HTTPException(404, 'Overlay not available')
+    return FileResponse(path, media_type='video/mp4')
+
+
 @app.get('/api/clips/{job_id}/{kind}')
 def get_annotation(job_id: str, kind: str, start_ms: int = Query(0,ge=0), end_ms: int | None = Query(None,ge=0)):
     job=get_job(job_id)
@@ -173,7 +202,6 @@ def get_annotation(job_id: str, kind: str, start_ms: int = Query(0,ge=0), end_ms
                 t=item.get('t_ms',-1)
                 if t >= start_ms and (end_ms is None or t < end_ms):
                     result.append(item)
-                    if len(result)>=15000:break
         return result
     data=json.loads(path.read_text(encoding='utf-8'))
     if start_ms or end_ms is not None:

@@ -32,7 +32,10 @@ export async function loadJobResults(job){
   for(const [module,route,name] of OUTPUTS){
     if(!modules.has(module))continue;
     const data=await apiFetch(`/api/clips/${encodeURIComponent(job.job_id)}/${route}`,{timeoutMs:120000});
-    parsed.push(parseResultFile(name,JSON.stringify(data)));
+    const contents = module === 'ps1' && Array.isArray(data)
+      ? data.map(frame=>JSON.stringify(frame)).join('\n')
+      : JSON.stringify(data);
+    parsed.push(parseResultFile(name,contents));
   }
   return parsed;
 }

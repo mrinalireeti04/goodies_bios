@@ -14,7 +14,7 @@ export function UploadDialog(){
   const backend=useBackendProcessing();
   function ingest(files){const originals=Array.from(files||[]);const added=addFiles(originals);if(added.length){
       if(useRealApi){for(const clip of added){const file=originals.find(f=>f.name===clip.name&&f.size===clip.size);if(file)backend.mutate({clip,file});}}
-      resetPlayback();navigate('/studio');
+      resetPlayback();setOpen(false);navigate('/studio');
     }}
   return <Dialog open={open} onOpenChange={v=>{setOpen(v);if(v)clearErrors();}}><DialogContent>
     <div className="mb-4 flex items-center gap-3"><div className="rounded-xl bg-blue-50 p-3 text-blue-600"><UploadCloud size={23}/></div><div><DialogTitle className="text-xl font-extrabold tracking-tight">Import factory media</DialogTitle><DialogDescription className="mt-1 text-sm text-slate-500">Add several images or videos to your private workspace.</DialogDescription></div></div>
