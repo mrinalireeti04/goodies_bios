@@ -1,0 +1,955 @@
+{
+  "clip_id": "mytronlabs-000003-013",
+  "video_path": "D:\\goodies_bios\\sample_videos\\mytronlabs-000003-013.mp4",
+  "video_duration": 180.0,
+  "total_tasks": 57,
+  "unique_task_types": 5,
+  "unique_task_list": [
+    "Adjust tang mechanism",
+    "Adjust tang screw",
+    "Inspect diamond",
+    "Polish diamond",
+    "Switch tang fixture"
+  ],
+  "tasks": [
+    {
+      "task_id": "T001",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 0.0,
+        "end_s": 2.5,
+        "duration_s": 2.5
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects the diamond in the dop fixture using a handheld loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T002",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 2.5,
+        "end_s": 5.5,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker places the tang fixture onto the spinning scaife wheel for polishing.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T003",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 5.5,
+        "end_s": 9.0,
+        "duration_s": 3.5
+      },
+      "confidence": 0.95,
+      "description": "Worker lifts the tang and inspects the diamond facet with the loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T004",
+      "task_name": "Adjust tang screw",
+      "verb": "adjust",
+      "object": "tang screw",
+      "hand": "both",
+      "timeline": {
+        "start_s": 9.0,
+        "end_s": 14.0,
+        "duration_s": 5.0
+      },
+      "confidence": 0.9,
+      "description": "Worker adjusts the tang mechanism to align the diamond facet angle.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T005",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 14.0,
+        "end_s": 18.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.95,
+      "description": "Worker places the tang fixture on the wheel to resume polishing.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T006",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 18.0,
+        "end_s": 21.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects the diamond through the magnifying loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T007",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 21.0,
+        "end_s": 24.5,
+        "duration_s": 3.5
+      },
+      "confidence": 0.95,
+      "description": "Worker positions the tang fixture on the rotating wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T008",
+      "task_name": "Adjust tang screw",
+      "verb": "adjust",
+      "object": "tang screw",
+      "hand": "both",
+      "timeline": {
+        "start_s": 24.5,
+        "end_s": 26.5,
+        "duration_s": 2.0
+      },
+      "confidence": 0.9,
+      "description": "Worker fine-tunes the angle adjustment screw on the tang.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T009",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 26.5,
+        "end_s": 30.0,
+        "duration_s": 3.5
+      },
+      "confidence": 0.95,
+      "description": "Worker places the tang onto the scaife plate.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T010",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 30.0,
+        "end_s": 32.5,
+        "duration_s": 2.5
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects the stone under magnifying glass.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T011",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 32.5,
+        "end_s": 35.0,
+        "duration_s": 2.5
+      },
+      "confidence": 0.95,
+      "description": "Worker places the tang back onto the spinning plate.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T012",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 35.0,
+        "end_s": 37.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects the polishing progress with the loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T013",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 37.0,
+        "end_s": 40.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker sets the tang fixture onto the lap wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T014",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 40.0,
+        "end_s": 42.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects the diamond facet using the magnifying loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T015",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 42.0,
+        "end_s": 46.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.95,
+      "description": "Worker lowers the tang fixture back onto the polishing surface.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T016",
+      "task_name": "Adjust tang mechanism",
+      "verb": "adjust",
+      "object": "tang mechanism",
+      "hand": "both",
+      "timeline": {
+        "start_s": 46.0,
+        "end_s": 52.0,
+        "duration_s": 6.0
+      },
+      "confidence": 0.9,
+      "description": "Worker adjusts the position of the dop within the tang fixture while looking closely.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T017",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 52.0,
+        "end_s": 56.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.95,
+      "description": "Worker sets the tang back on the rotating wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T018",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 56.0,
+        "end_s": 59.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker examines the facet polished condition.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T019",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 59.0,
+        "end_s": 63.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.95,
+      "description": "Worker places the tang onto the scaife.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T020",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 63.0,
+        "end_s": 65.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects the diamond with the magnifying tool.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T021",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 65.0,
+        "end_s": 67.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "Worker places the tang fixture on the wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T022",
+      "task_name": "Adjust tang screw",
+      "verb": "adjust",
+      "object": "tang screw",
+      "hand": "both",
+      "timeline": {
+        "start_s": 67.0,
+        "end_s": 71.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.9,
+      "description": "Worker turns adjusting screw on the tang assembly.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T023",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 71.0,
+        "end_s": 75.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.95,
+      "description": "Worker places the tang back on the wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T024",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 75.0,
+        "end_s": 78.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects the stone surface through the magnifying loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T025",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 78.0,
+        "end_s": 81.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker lowers the tang fixture onto the lap.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T026",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 81.0,
+        "end_s": 84.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker checks the facet under magnification.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T027",
+      "task_name": "Adjust tang mechanism",
+      "verb": "adjust",
+      "object": "tang mechanism",
+      "hand": "both",
+      "timeline": {
+        "start_s": 84.0,
+        "end_s": 90.0,
+        "duration_s": 6.0
+      },
+      "confidence": 0.9,
+      "description": "Worker adjusts the stone position inside the holding mechanism.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T028",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 90.0,
+        "end_s": 93.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker returns the tang to the polishing wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T029",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 93.0,
+        "end_s": 96.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker checks the polished face with loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T030",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 96.0,
+        "end_s": 99.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker sets tang back onto the polishing plate.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T031",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 99.0,
+        "end_s": 101.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "Worker examines diamond facet.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T032",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 101.0,
+        "end_s": 103.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "Worker puts tang fixture on the wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T033",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 103.0,
+        "end_s": 105.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects diamond using loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T034",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 105.0,
+        "end_s": 107.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "Worker places tang fixture back onto spinning plate.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T035",
+      "task_name": "Adjust tang mechanism",
+      "verb": "adjust",
+      "object": "tang mechanism",
+      "hand": "both",
+      "timeline": {
+        "start_s": 107.0,
+        "end_s": 111.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.9,
+      "description": "Worker fine-tunes the tang mechanism while inspecting.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T036",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 111.0,
+        "end_s": 115.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.95,
+      "description": "Worker polishes diamond on the scaife plate.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T037",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 115.0,
+        "end_s": 118.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects diamond facet with loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T038",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 118.0,
+        "end_s": 121.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker places tang on polishing wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T039",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 121.0,
+        "end_s": 124.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects diamond through loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T040",
+      "task_name": "Adjust tang screw",
+      "verb": "adjust",
+      "object": "tang screw",
+      "hand": "both",
+      "timeline": {
+        "start_s": 124.0,
+        "end_s": 130.0,
+        "duration_s": 6.0
+      },
+      "confidence": 0.9,
+      "description": "Worker adjusts the screw mechanism on the tang fixture.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T041",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 130.0,
+        "end_s": 133.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker lowers tang back onto polishing wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T042",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 133.0,
+        "end_s": 136.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects stone using magnifying loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T043",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 136.0,
+        "end_s": 138.0,
+        "duration_s": 2.0
+      },
+      "confidence": 0.95,
+      "description": "Worker places tang on wheel for continued polishing.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T044",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 138.0,
+        "end_s": 141.0,
+        "duration_s": 3.0
+      },
+      "confidence": 0.95,
+      "description": "Worker performs inspection of the polished facet.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T045",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 141.0,
+        "end_s": 145.0,
+        "duration_s": 4.0
+      },
+      "confidence": 0.95,
+      "description": "Worker places tang onto the polishing scaife.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T046",
+      "task_name": "Switch tang fixture",
+      "verb": "switch",
+      "object": "tang fixture",
+      "hand": "both",
+      "timeline": {
+        "start_s": 145.0,
+        "end_s": 180.0,
+        "duration_s": 35.0
+      },
+      "confidence": 0.9,
+      "description": "Worker sets aside white tang, selects dark grey tang fixture, and mounts the dop onto it.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T047",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.95,
+      "description": "Worker polishes the diamond using the dark tang on the wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T048",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects the diamond facet progress.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T049",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.95,
+      "description": "Worker places tang fixture back on wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T050",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.95,
+      "description": "Worker checks the diamond facet with a loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T051",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.95,
+      "description": "Worker polishes the diamond on the spinning wheel.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T052",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.95,
+      "description": "Worker checks the progress on the diamond using a loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T053",
+      "task_name": "Polish diamond",
+      "verb": "polish",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.95,
+      "description": "Worker polishes the diamond on the scaife.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T054",
+      "task_name": "Adjust tang screw",
+      "verb": "adjust",
+      "object": "tang screw",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.9,
+      "description": "Worker adjusts the tang mechanism while inspecting.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T055",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects the diamond with an eye loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T056",
+      "task_name": "Adjust tang screw",
+      "verb": "adjust",
+      "object": "tang screw",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.9,
+      "description": "Worker fine-tunes the tang adjustment screw.",
+      "evidence": "Gemini video analysis (refined)"
+    },
+    {
+      "task_id": "T057",
+      "task_name": "Inspect diamond",
+      "verb": "inspect",
+      "object": "diamond",
+      "hand": "both",
+      "timeline": {
+        "start_s": 180.0,
+        "end_s": 180.0,
+        "duration_s": 0.0
+      },
+      "confidence": 0.95,
+      "description": "Worker inspects the diamond surface with a loupe.",
+      "evidence": "Gemini video analysis (refined)"
+    }
+  ],
+  "groups": [
+    {
+      "group_id": "G001",
+      "group_name": "First Fixture Diamond Polishing & Fine-Tuning Phase",
+      "task_ids": [
+        "T001",
+        "T002",
+        "T003",
+        "T004",
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T009",
+        "T010",
+        "T011",
+        "T012",
+        "T013",
+        "T014",
+        "T015",
+        "T016",
+        "T017",
+        "T018",
+        "T019",
+        "T020",
+        "T021",
+        "T022",
+        "T023",
+        "T024",
+        "T025",
+        "T026",
+        "T027",
+        "T028",
+        "T029",
+        "T030",
+        "T031",
+        "T032",
+        "T033",
+        "T034",
+        "T035",
+        "T036",
+        "T037",
+        "T038",
+        "T039",
+        "T040",
+        "T041",
+        "T042",
+        "T043",
+        "T044",
+        "T045"
+      ],
+      "description": "Continuous process of polishing, inspecting, and adjusting the diamond facet using the initial tang holder.",
+      "start_s": 0.0,
+      "end_s": 145.0
+    },
+    {
+      "group_id": "G002",
+      "group_name": "Second Fixture Diamond Polishing Phase",
+      "task_ids": [
+        "T047",
+        "T048",
+        "T049",
+        "T050",
+        "T051",
+        "T052",
+        "T053",
+        "T054",
+        "T055",
+        "T056",
+        "T057"
+      ],
+      "description": "Polishing and quality checking the diamond after swapping to a different tang fixture.",
+      "start_s": 180.0,
+      "end_s": 180.0
+    }
+  ],
+  "processing_metadata": {
+    "model_used": "gemini-3.5-flash",
+    "segments_analyzed": 2,
+    "processing_time_s": 517.05,
+    "timestamp_refinement_applied": true,
+    "enrichment_sources": [],
+    "failed_segments": []
+  }
+}
