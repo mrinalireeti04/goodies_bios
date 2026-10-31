@@ -63,10 +63,13 @@ def read_frames(path, step=2):
     idx = 0
     try:
         while True:
-            ok, frame = cap.read()
-            if not ok:
+            # grab() moves on without converting the frame; only the frames we keep are decoded fully
+            if not cap.grab():
                 break
             if idx % step == 0:
+                ok, frame = cap.retrieve()
+                if not ok:
+                    break
                 yield idx, frame
             idx += 1
     finally:
@@ -294,9 +297,47 @@ def validate_file(path):
 
 
 # ---------- per clip ----------
+class IdleGate:
+    """Skip detection while nothing is happening (a compute saver, off by default).
+
+    After `after` processed frames in a row with no hand, only every `every`-th processed
+    frame is checked until a hand shows up again. Skipped frames are written as empty
+    records (`hands: []`) and counted in summary.json. The cost: a hand that enters the view
+    during a skipped frame is first seen one processed frame late.
+    """
+
+    def __init__(self, after=0, every=2):
+        self.after = after          # 0 = never skip
+        self.every = max(2, every)
+        self.empty_run = 0
+        self.since_check = 0
+        self.skipped = 0
+
+    def skip_next(self):
+        if self.after <= 0 or self.empty_run < self.after:
+            return False
+        if self.since_check < self.every - 1:
+            self.since_check += 1
+            self.skipped += 1
+            return True
+        return False
+
+    def update(self, had_hands):
+        """Call after a frame that was actually checked."""
+        self.since_check = 0
+        self.empty_run = 0 if had_hands else self.empty_run + 1
+
+
+def empty_record(frame, frame_idx, fps, clip_id):
+    h, w = frame.shape[:2]
+    return {"schema_version": SCHEMA_VERSION, "clip_id": clip_id, "frame_idx": int(frame_idx),
+            "t_ms": int(round(frame_idx * 1000 / fps)), "frame_width": int(w),
+            "frame_height": int(h), "hands": []}
+
+
 def run_clip(video, out_root="out", step=2, save_video=True,
              clahe=False, swap_lr=SWAP_LR, engine_name="mediapipe", engine=None,
-             rtm_min_score=None):
+             rtm_min_score=None, idle_after=0, idle_every=2):
     """Process one clip, write outputs, return a summary dict."""
     video = Path(video)
     clip_id = video.stem
@@ -316,14 +357,19 @@ def run_clip(video, out_root="out", step=2, save_video=True,
         engine.prev_boxes = []
         engine.prev_hands = []
     writer = None
+    gate = IdleGate(idle_after, idle_every)
     processed = with_hands = 0
     score_sum, score_n = 0.0, 0
     start = time.time()
     try:
         with open(out_dir / "hands.jsonl", "w", encoding="utf-8") as f:
             for idx, frame in read_frames(video, step):
-                rec = process_frame(landmarker, frame, idx, fps, clip_id,
-                                    PREPROCESS_WIDTH, clahe, swap_lr, engine)
+                if gate.skip_next():
+                    rec = empty_record(frame, idx, fps, clip_id)
+                else:
+                    rec = process_frame(landmarker, frame, idx, fps, clip_id,
+                                        PREPROCESS_WIDTH, clahe, swap_lr, engine)
+                    gate.update(bool(rec["hands"]))
                 validate_record(rec)
                 f.write(json.dumps(rec, allow_nan=False, separators=(",", ":")) + "\n")
 
@@ -367,6 +413,9 @@ def run_clip(video, out_root="out", step=2, save_video=True,
                        "clahe": clahe, "preprocess_width": PREPROCESS_WIDTH,
                        "engine": engine_name},
     }
+    if gate.after > 0:
+        summary["run_config"]["idle_skip"] = {"after": gate.after, "every": gate.every}
+        summary["idle_skipped_frames"] = gate.skipped
     if engine is not None:
         summary["run_config"]["rtm_min_score"] = engine.min_kp_score
         summary["rtmpose_stats"] = dict(engine.stats)
@@ -390,6 +439,10 @@ def main(argv=None):
     ap.add_argument("--rtm-min-score", type=float, default=None,
                     help="rtmpose: drop hands whose mean keypoint score is below this "
                          "(default 0.2)")
+    ap.add_argument("--idle-after", type=int, default=0, metavar="N",
+                    help="compute saver: after N empty frames in a row, check only every "
+                         "--idle-every-th frame until a hand appears (0 = off, 8 is a good start)")
+    ap.add_argument("--idle-every", type=int, default=2, metavar="K")
     ap.add_argument("--validate", metavar="HANDS_JSONL")
     args = ap.parse_args(argv)
 
@@ -412,7 +465,8 @@ def main(argv=None):
     for clip in clips:
         s = run_clip(clip, args.out, args.step, not args.no_video,
                      args.clahe, (SWAP_LR or args.swap) and not args.no_swap,
-                     args.engine, rtm_min_score=args.rtm_min_score)
+                     args.engine, rtm_min_score=args.rtm_min_score,
+                     idle_after=args.idle_after, idle_every=args.idle_every)
         print(json.dumps(s, indent=2))
     return 0
 

@@ -32,6 +32,23 @@ python tools\postprocess_all.py out out_rtm2 --max-gap 2
 - `tools/resolve_sides.py`: gives `unknown` hands a left/right side (x-order, then neighbouring frames) -> `hands_sided.jsonl`
 - `tools/fill_gaps.py`: fills gaps of up to `--max-gap` frames by interpolation; filled hands have `source: "interpolated"` and a null score -> `hands_final.jsonl`
 
+## Compute saver (optional, off by default)
+
+```
+python hand_detect.py data\<clip>.mp4 --idle-after 8 --idle-every 2 --no-video
+```
+
+After 8 processed frames in a row with no hand, only every 2nd frame is checked until a hand appears. Skipped frames are still written as empty records and counted in `summary.json` (`idle_skipped_frames`). On our clips this skips about 10-30% of detector calls on clips with long hand-free stretches and almost nothing on busy ones; the cost is that a hand entering the view is seen up to one processed frame late (about 1-5% of hand frames on the sparse clips).
+
+## Quality gate
+
+```
+python tools\quality_gate.py out out_rtm2
+python tools\quality_gate.py out_rtm2 --video data      # also flags seconds where a face may be visible
+```
+
+Writes `quality.json` per clip: usable-time share, grade A-D, and a review queue of the seconds a person should check first (with reasons). Timestamps only, no images.
+
 ## Tests
 
 ```
