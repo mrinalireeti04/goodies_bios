@@ -1,0 +1,37 @@
+# --- data and anything derived from it (hackathon data rules) ---
+data/
+Hack-data/
+egohack-data/
+outputs/
+cache/
+labels/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.gif
+*.npz
+*.npy
+*.jsonl
+
+# --- model weights and encoders ---
+*.pt
+*.pth
+*.ts
+*.onnx
+*.engine
+
+# --- python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# --- secrets ---
+.env
