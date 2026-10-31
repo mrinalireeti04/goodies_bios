@@ -1,0 +1,50 @@
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+# Hackathon: private company media and all derived content
+private_data/
+data/
+uploads/
+!src/features/uploads/
+outputs/
+processed/
+frames/
+extracted_frames/
+tmp/
+temp/
+cache/
+.model_cache/
+**/private_media/
+**/recordings/
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.heic
+*.jsonl
+# Exception: synthetic public assets are tracked intentionally.
+# Do not store private screenshots, images, or object crops in public/.
+
+# Generated private PS1–PS4 inference results (keep outside public Git)
+**/hands.jsonl
+**/ps2.json
+**/actions.json
+**/ps4.json
+**/*-annotations.json
+**/*-actions.csv
+**/crops/
+**/screenshots/
+**/captures/
+**/__pycache__/
+*.pyc
+
+# Team reference docs may summarize the private event brief; do not publish
+project_notes/
+# FORGE private FastAPI working directory
+.local_data/

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">
+<defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#263b4b"/><stop offset="1" stop-color="#0f1b2b"/></linearGradient><linearGradient id="metal" x2="0" y2="1"><stop stop-color="#7e95a7"/><stop offset="0.5" stop-color="#455e72"/><stop offset="1" stop-color="#263d52"/></linearGradient><pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse"><path d="M34 0H0V34" stroke="#e8f1fa" stroke-opacity=".07" fill="none"/></pattern></defs>
+<rect width="1280" height="720" fill="url(#g)"/><rect width="1280" height="720" fill="url(#grid)"/>
+<rect x="40" y="48" width="1200" height="624" rx="22" fill="#344b5c" stroke="#5a7387" stroke-width="4"/>
+<rect x="75" y="85" width="1130" height="550" rx="15" fill="#182d40"/><path d="M75 455h1130" stroke="#647e91" stroke-width="4"/><rect x="110" y="480" width="1060" height="120" rx="12" fill="#304758"/>
+<rect x="440" y="220" width="390" height="270" rx="18" fill="url(#metal)" stroke="#93aabb" stroke-width="6"/>
+<rect x="495" y="263" width="284" height="185" rx="14" fill="#182b3a" stroke="#a3b6c4" stroke-width="8"/>
+<rect x="558" y="302" width="146" height="106" rx="14" fill="#6a8497" stroke="#d2e2eb" stroke-width="7"/>
+<g fill="#aabcca" stroke="#283f53" stroke-width="3"><circle cx="483" cy="260" r="14"/><circle cx="790" cy="260" r="14"/><circle cx="483" cy="450" r="14"/><circle cx="790" cy="450" r="14"/><circle cx="560" cy="321" r="8"/><circle cx="708" cy="321" r="8"/></g>
+<path d="M120 280L340 248L454 315L410 470L250 520L90 410Z" fill="#5c7384" stroke="#91a7b7" stroke-width="5"/>
+<path d="M1140 285L955 247L828 315L865 470L1018 518L1170 415Z" fill="#526f81" stroke="#8ca9b7" stroke-width="5"/>
+<g fill="#c3a28a" stroke="#d1b39a" stroke-width="5"><path d="M260 418Q350 366 480 349L535 390Q446 438 358 482L285 484Z"/><path d="M1030 402Q933 364 806 348L759 388Q856 434 950 480L1029 475Z"/></g>
+<g fill="#d2b29b"><ellipse cx="528" cy="382" rx="35" ry="24" transform="rotate(-10 528 382)"/><ellipse cx="767" cy="382" rx="35" ry="24" transform="rotate(10 767 382)"/></g>
+<path d="M660 298L672 190L700 180L704 296Z" fill="#f0b54d" stroke="#ffdb7a" stroke-width="6"/>
+<path d="M683 173L735 158L740 190L697 204Z" fill="#778c9e" stroke="#b9c7d2" stroke-width="6"/>
+<path d="M635 301L715 301L715 332L635 332Z" fill="#adbcc8"/>
+<rect x="99" y="111" width="270" height="68" rx="10" fill="#162434" stroke="#4b677a"/><text x="124" y="151" fill="#adc0d2" font-size="26" font-family="Arial" font-weight="bold">STATION 04</text>
+<text x="105" y="652" fill="#a5bdcb" font-size="20" font-family="Arial" opacity=".75">SYNTHETIC ILLUSTRATION · NOT FACTORY FOOTAGE</text>
+</svg>

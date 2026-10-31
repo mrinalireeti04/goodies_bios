@@ -1,0 +1,70 @@
+@import "tailwindcss";
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #202938; background: #f5f7fa;
+  font-synthesis: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+::selection { background: #bfd5ff; color: #142443; }
+:root { --background: #f5f7fa; --foreground: #202938; --card: #fff; --primary: #2563eb; --border: #e0e5eb; --muted: #64748b; }
+.panel { background:#fff; border:1px solid #e0e5eb; box-shadow:0 3px 13px rgba(24,45,77,.035); border-radius:12px; }
+.text-muted { color:#64748b; }
+.studio-panel-heading { font-weight:700; font-size:14px; letter-spacing:-.025em; }
+.studio-grid { display:grid; grid-template-columns: 260px minmax(0,1fr); gap:18px; }
+.studio-main-grid { display:grid; grid-template-columns: minmax(0,1.9fr) minmax(280px,1fr); gap:18px; }
+.studio-lower-grid { display:grid; grid-template-columns: minmax(240px,1fr) minmax(300px,1.35fr) minmax(210px,.8fr); gap:18px; }
+@media(max-width:1240px){ .studio-grid{grid-template-columns:220px minmax(0,1fr)} .studio-main-grid{grid-template-columns:minmax(0,1.5fr) minmax(240px,1fr)} .studio-lower-grid{grid-template-columns:1fr 1fr} }
+@media(max-width:900px){ .studio-grid{display:block} .studio-main-grid,.studio-lower-grid{grid-template-columns:1fr} }
+input[type=range]{accent-color:#2563eb}
+.hero-grid { background-image:linear-gradient(rgba(148,163,184,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,184,.08) 1px,transparent 1px);background-size:42px 42px; }
+.gradient-hero { background:radial-gradient(ellipse 70% 50% at 51% -6%,rgba(49,92,165,.4),transparent),radial-gradient(ellipse 40% 50% at 80% 58%,rgba(29,78,136,.2),transparent),#101827; }
+body:has(.landing-page){background:#0c1423}
+
+/* The landing page and Studio share the same navy / electric-blue visual system.
+   Keep these overrides scoped so the existing landing page remains untouched. */
+body:has(.studio-dark) { background: #0c1423; color: #e2e8f0; }
+body:has(.studio-light) { background: #f5f7fa; color: #202938; }
+.studio-dark .panel {
+  background: #111e31;
+  border-color: rgba(255,255,255,.1);
+  box-shadow: 0 10px 30px rgba(0,0,0,.16);
+}
+.studio-dark .border-slate-100 { border-color: rgba(255,255,255,.08); }
+.studio-dark .border-slate-200 { border-color: rgba(255,255,255,.13); }
+.studio-dark .border-slate-300 { border-color: rgba(255,255,255,.2); }
+.studio-dark .bg-white { background-color: #152339; }
+.studio-dark .bg-white\/95 { background-color: rgb(16 24 39 / .95); }
+.studio-dark .bg-white\/90 { background-color: rgb(21 35 57 / .9); }
+.studio-dark .bg-slate-50 { background-color: #152339; }
+.studio-dark .bg-slate-100 { background-color: #1b2a40; }
+.studio-dark .bg-blue-50 { background-color: rgb(37 99 235 / .16); }
+.studio-dark .bg-blue-50\/50 { background-color: rgb(37 99 235 / .1); }
+.studio-dark .bg-blue-50\/70 { background-color: rgb(37 99 235 / .18); }
+.studio-dark .text-slate-900,
+.studio-dark .text-slate-800,
+.studio-dark .text-slate-700 { color: #f8fafc; }
+.studio-dark .text-slate-600 { color: #cbd5e1; }
+.studio-dark .text-slate-500 { color: #94a3b8; }
+.studio-dark .text-slate-400 { color: #94a3b8; }
+.studio-dark .text-blue-700 { color: #93c5fd; }
+.studio-dark .text-emerald-700 { color: #6ee7b7; }
+.studio-dark input,
+.studio-dark select,
+.studio-dark textarea { color: #e2e8f0; border-color: rgba(255,255,255,.13); background-color: #152339; }
+.studio-dark input::placeholder { color: #64748b; }
+.studio-dark option { background: #152339; color: #e2e8f0; }
+.studio-dark .hover\:bg-slate-50:hover { background-color: #1b2a40; }
+.studio-dark .hover\:bg-slate-100:hover { background-color: #20324b; }
+.studio-dark .hover\:bg-blue-50:hover,
+.studio-dark .hover\:bg-blue-50\/50:hover { background-color: rgb(37 99 235 / .18); }
+.studio-dark .hover\:border-blue-200:hover { border-color: rgb(96 165 250 / .55); }
+.studio-dark .hover\:text-slate-900:hover { color: #fff; }
+.studio-dark .text-rose-700 { color: #fda4af; }
+.studio-dark .bg-rose-50 { background-color: rgb(159 18 57 / .2); }
+.studio-dark .text-amber-700 { color: #fcd34d; }
+.studio-dark .bg-amber-50 { background-color: rgb(180 83 9 / .2); }
+.studio-dark .text-slate-950 { color: #f8fafc; }
