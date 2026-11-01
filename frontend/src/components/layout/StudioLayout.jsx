@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChartNoAxesCombined, Download, FolderOpen, Moon, ScanEye, Search, Sun, UploadCloud } from 'lucide-react';
+import { ArrowLeft, ChartNoAxesCombined, Download, Moon, ScanEye, Sun, UploadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useMediaStore } from '@/stores/useMediaStore';
-const nav=[['/studio','Vision Explorer',ScanEye],['/library','Library',FolderOpen],['/search','Search',Search],['/analytics','Analytics',ChartNoAxesCombined],['/export','Export',Download]];
+const nav=[['/studio','Vision Explorer',ScanEye],['/analytics','Analytics',ChartNoAxesCombined],['/export','Export',Download]];
 export function StudioLayout(){
   const setOpen=useMediaStore(s=>s.setUploadOpen),navigate=useNavigate();
   const [dark,setDark]=useState(()=>window.localStorage.getItem('forge-studio-theme')!=='light');

@@ -1,9 +1,13 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { demoClip } from '@/mocks/demoData';
 import {useInferenceStore} from '@/stores/useInferenceStore';
 const allowed = /\.(mp4|mov|webm|jpg|jpeg|png)$/i;
 const MAX_BYTES = 800 * 1024 * 1024;
-export const useMediaStore = create((set,get)=>({
+const persistedClip=(clip)=>{const {url,...rest}=clip;return {...rest,url:clip.synthetic?url:null};};
+const restoredClip=(clip)=>({...clip,url:clip.synthetic?(clip.url||demoClip.url):null,status:clip.synthetic?clip.status:(clip.jobId?clip.status||'saved':'needs-reselect')});
+
+export const useMediaStore = create(persist((set,get)=>({
   clips:[demoClip], selectedClipId:demoClip.id, errors:[], uploadOpen:false,
   setUploadOpen:(uploadOpen)=>set({uploadOpen}),
   setSelectedClip:(selectedClipId)=>set({selectedClipId}),
@@ -29,4 +33,8 @@ export const useMediaStore = create((set,get)=>({
     useInferenceStore.getState().clearClip(id);
     set(s=>{const clips=s.clips.filter(x=>x.id!==id);return {clips,selectedClipId:s.selectedClipId===id?(clips[0]?.id||null):s.selectedClipId};});
   }
+}),{
+  name:'forge-media-session-v1',
+  partialize:(state)=>({clips:state.clips.map(persistedClip),selectedClipId:state.selectedClipId}),
+  merge:(persisted,current)=>({...current,...persisted,clips:(persisted?.clips||current.clips).map(restoredClip)})
 }));

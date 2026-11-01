@@ -2,7 +2,6 @@
 import copy
 import json
 import os
-import subprocess
 import threading
 from pathlib import Path
 
@@ -14,11 +13,42 @@ from .rtm_hand import RTMHandEngine, iou
 
 INFERENCE_LOCK = threading.Lock()
 MODEL = Path(__file__).parent / 'models' / 'hand_landmarker.task'
+MEDIAPIPE_FALLBACK_THRESHOLD = 0.8
 
 
-def fill_gaps(records, limit=10):
+def needs_rtm_fallback(hands, threshold=MEDIAPIPE_FALLBACK_THRESHOLD):
+    """Use handedness confidence as a proxy; it is not landmark accuracy."""
+    return not hands or any(
+        hand.get('side') not in ('left', 'right')
+        or hand.get('handedness_score') is None
+        or not np.isfinite(hand['handedness_score'])
+        or hand['handedness_score'] < threshold
+        for hand in hands
+    )
+
+
+def _gap_plausible(before, after, steps, frame):
+    """Conservative spatial checks adapted from the MediaPipe branch."""
+    try:
+        boxes = [np.asarray(h['bbox_px'], dtype=float) for h in (before, after)]
+        width, height = float(frame['frame_width']), float(frame['frame_height'])
+        if width <= 0 or height <= 0 or any(b.shape != (4,) or not np.isfinite(b).all() for b in boxes):
+            return False
+        sizes = [max(b[2] - b[0], b[3] - b[1]) for b in boxes]
+        if min(sizes) <= 0 or not 0.5 <= sizes[1] / sizes[0] <= 2.0:
+            return False
+        for b in boxes:
+            if b[0] <= width * .02 or b[1] <= height * .02 or b[2] >= width * .98 or b[3] >= height * .98:
+                return False
+        centres = [(b[:2] + b[2:]) / 2 for b in boxes]
+        return np.linalg.norm(centres[1] - centres[0]) <= steps * sum(sizes) / 2
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def fill_gaps(records, limit=3):
+    """Fill short plausible gaps; preserve measured fields and never mutate input."""
     result = copy.deepcopy(records)
-    # Anatomical side is the conservative identity here; never interpolate unknowns.
     for side in ('left', 'right'):
         for field in ('kp2d_px', 'kp3d_hand_m'):
             previous = None
@@ -28,22 +58,38 @@ def fill_gaps(records, limit=10):
                     continue
                 if previous is not None:
                     j, before = previous
-                    if 0 < i-j-1 <= limit:
+                    if 0 < i-j-1 <= limit and _gap_plausible(before, hand, i-j, records[j]):
+                        times = [records[k]['t_ms'] for k in range(j, i+1)]
+                        if any(b <= a for a, b in zip(times, times[1:])):
+                            previous = (i, hand)
+                            continue
+                        start, end = np.asarray(before[field], dtype=float), np.asarray(hand[field], dtype=float)
+                        if start.shape != end.shape or not np.isfinite(start).all() or not np.isfinite(end).all():
+                            previous = (i, hand)
+                            continue
+                        pending = []
                         for k in range(j+1, i):
-                            alpha = (records[k]['t_ms']-records[j]['t_ms'])/(frame['t_ms']-records[j]['t_ms'])
+                            alpha = (records[k]['t_ms']-times[0])/(times[-1]-times[0])
+                            points = (1-alpha)*start + alpha*end
                             target = next((h for h in result[k]['hands'] if h['side'] == side), None)
+                            if target is None and field != 'kp2d_px':
+                                continue
                             if target is None:
-                                if field != 'kp2d_px':
-                                    continue
+                                box = [*points.min(axis=0), *points.max(axis=0)]
+                                if any(iou(box, h['bbox_px']) > .3 for h in result[k]['hands']):
+                                    pending = []
+                                    break
+                            pending.append((k, target, points))
+                        for k, target, points in pending:
+                            if target is None:
                                 target = copy.deepcopy(before)
-                                target['kp3d_hand_m'] = None
+                                target.update(kp3d_hand_m=None, handedness_score=None, source='interpolated')
+                                target.pop('kp3d_hand_m_source', None)
                                 result[k]['hands'].append(target)
-                            target[field] = ((1-alpha)*np.array(before[field])+alpha*np.array(hand[field])).tolist()
-                            target['source'] = 'interpolated'
+                            target[field] = points.tolist()
                             target[field+'_source'] = 'interpolated'
                             if field == 'kp2d_px':
-                                pts = np.array(target[field])
-                                target['bbox_px'] = [*pts.min(axis=0), *pts.max(axis=0)]
+                                target['bbox_px'] = [*points.min(axis=0), *points.max(axis=0)]
                 previous = (i, hand)
     return result
 
@@ -58,8 +104,8 @@ def _run(video, out):
     if not MODEL.is_file():
         raise RuntimeError('Hand model missing: run backend/setup_models.py')
     records = []
-    engine = RTMHandEngine()
-    print(f"[inference] runtime={engine.runtime}", flush=True)
+    engine = None
+    fallback_frames = 0
     cap = cv2.VideoCapture(str(video))
     fps = cap.get(cv2.CAP_PROP_FPS)
     cap.release()
@@ -70,6 +116,17 @@ def _run(video, out):
         for idx, frame in mp.read_frames(video, step=1):
             rec = mp.process_frame(detector, frame, idx, fps, out.parent.name)
             originals = rec['hands']
+            if not needs_rtm_fallback(originals):
+                # RTM's previous-frame proposals must not carry across skipped frames.
+                if engine is not None:
+                    engine.prev_boxes = []
+                    engine.prev_hands = []
+                records.append(rec)
+                continue
+            if engine is None:
+                engine = RTMHandEngine()
+                print(f"[inference] runtime={engine.runtime}", flush=True)
+            fallback_frames += 1
             from .rtm_hand import to_schema_hands
             refined = to_schema_hands(engine.estimate(frame, originals))
             used = set()
@@ -101,24 +158,13 @@ def _run(video, out):
             records.append(rec)
     if not records:
         raise ValueError('No decodable video frames')
-    print(f"[inference] completed RTMPose runtime={engine.runtime}", flush=True)
+    print(f"[inference] RTMPose fallback frames={fallback_frames}/{len(records)} runtime={engine.runtime if engine else 'not needed'}", flush=True)
     (out/'hands.raw.jsonl').write_text(''.join(json.dumps(r,allow_nan=False)+'\n' for r in records))
     corrected = correct_hand_sides(records, window=60)
     filled = fill_gaps(corrected)
     path = out/'hands.jsonl'
     path.write_text(''.join(json.dumps(r,allow_nan=False)+'\n' for r in filled))
     pose = {'schema_version':'1.0','clip_id':out.parent.name,'coordinate_frame':'hand_centered','frames':[
-        {'t_ms':r['t_ms'],'hands':[{'hand_id':h['hand_id'],'side':h['side'],'joints_3d_m':h['kp3d_hand_m'],'source':h['source']} for h in r['hands'] if h.get('kp3d_hand_m')]} for r in filled]}
+        {'t_ms':r['t_ms'],'hands':[{'hand_id':h['hand_id'],'side':h['side'],'joints_3d_m':h['kp3d_hand_m'],'source':'interpolated' if h.get('kp3d_hand_m_source') == 'interpolated' else h['source']} for h in r['hands'] if h.get('kp3d_hand_m')]} for r in filled]}
     (out/'ps4.json').write_text(json.dumps(pose,allow_nan=False))
-    w,h = records[0]['frame_width'],records[0]['frame_height']
-    cmd = ['ffmpeg','-y','-loglevel','error','-f','rawvideo','-pix_fmt','bgr24','-s',f'{w}x{h}','-r',str(fps),'-i','-','-an','-c:v','libx264','-pix_fmt','yuv420p','-vf','pad=ceil(iw/2)*2:ceil(ih/2)*2','-movflags','+faststart',str(out/'overlay.mp4')]
-    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
-    try:
-        for idx, frame in mp.read_frames(video, step=1):
-            proc.stdin.write(mp.draw_overlay(frame, filled[idx]['hands']).tobytes())
-    finally:
-        proc.stdin.close()
-        code = proc.wait()
-    if code:
-        raise RuntimeError('Overlay encoding failed')
     return path

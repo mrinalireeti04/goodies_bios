@@ -5,14 +5,27 @@ import {parseResultFile} from './annotationData.js';
 const OUTPUTS=[['ps1','hands','hands.jsonl'],['ps2','contacts','ps2.json'],['ps3','actions','actions.json'],['ps4','pose3d','ps4.json']];
 const pause=(ms)=>new Promise(resolve=>setTimeout(resolve,ms));
 
-export async function createJob(file, clientClipId) {
+export async function createJob(file, clientClipId, enablePS3 = false, enablePS2 = true) {
   const data=new FormData();
   data.append('file',file,file.name);
   data.append('client_clip_id',clientClipId);
+  data.append('enable_ps3',String(enablePS3));
+  data.append('enable_ps2',String(enablePS2));
   return apiFetch('/api/jobs',{method:'POST',body:data,timeoutMs:180000});
 }
 
+export async function findJobForClientClip(clientClipId,clip){
+  const jobs=await apiFetch('/api/clips');
+  const byClientId=clientClipId?jobs.find(job=>job.client_clip_id===clientClipId):null;
+  if(byClientId)return byClientId;
+  if(!clip?.name||!Number.isFinite(clip.size))return null;
+  const exact=jobs.filter(job=>job.name===clip.name&&job.size===clip.size);
+  return exact.length===1?exact[0]:null;
+}
+
 export async function fetchJob(jobId){return apiFetch(`/api/jobs/${encodeURIComponent(jobId)}`);}
+export async function generateManualMask(jobId,frameIndex,bbox){return apiFetch(`/api/clips/${encodeURIComponent(jobId)}/manual-mask`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({frame_idx:frameIndex,bbox_px:bbox}),timeoutMs:120000});}
+export async function retryPS3(jobId){return apiFetch(`/api/jobs/${encodeURIComponent(jobId)}/ps3`,{method:'POST'});}
 
 export async function waitForJob(jobId,{onStatus,signal,intervalMs=1700}={}){
   // Intentionally requires a real /api/jobs response; synthetic labels are never generated here.

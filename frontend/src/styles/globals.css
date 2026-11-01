@@ -6,7 +6,7 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; }
-button, input, select { font: inherit; }
+button, input, select, textarea { font-family: inherit; }
 button { cursor: pointer; }
 a { color: inherit; text-decoration: none; }
 ::selection { background: #bfd5ff; color: #142443; }
@@ -16,7 +16,7 @@ a { color: inherit; text-decoration: none; }
 .studio-panel-heading { font-weight:700; font-size:14px; letter-spacing:-.025em; }
 .studio-grid { display:grid; grid-template-columns: 260px minmax(0,1fr); gap:18px; }
 .studio-main-grid { display:grid; grid-template-columns: minmax(0,1.9fr) minmax(280px,1fr); gap:18px; }
-.studio-lower-grid { display:grid; grid-template-columns: minmax(240px,1fr) minmax(300px,1.35fr) minmax(210px,.8fr); gap:18px; }
+.studio-lower-grid { display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap:18px; }
 @media(max-width:1240px){ .studio-grid{grid-template-columns:220px minmax(0,1fr)} .studio-main-grid{grid-template-columns:minmax(0,1.5fr) minmax(240px,1fr)} .studio-lower-grid{grid-template-columns:1fr 1fr} }
 @media(max-width:900px){ .studio-grid{display:block} .studio-main-grid,.studio-lower-grid{grid-template-columns:1fr} }
 input[type=range]{accent-color:#2563eb}

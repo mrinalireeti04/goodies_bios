@@ -1,0 +1,78 @@
+# ps2/config/vocab.yaml — object names the detector looks for.
+# key = label written in the output; prompts = text the detector is given.
+# type: portable | fixed     hazard: true if hands near it while moving is a safety risk.
+# Edit freely after watching clips. Broad on purpose: judges will use unseen videos.
+
+objects:
+  # --- carpentry ---
+  hammer:            {type: portable, prompts: [hammer, claw hammer]}
+  mallet:            {type: portable, prompts: [mallet, rubber mallet, wooden mallet]}
+  chisel:            {type: portable, prompts: [chisel]}
+  hand_saw:          {type: portable, prompts: [hand saw]}
+  circular_saw:      {type: portable, hazard: true, prompts: [circular saw]}
+  jigsaw:            {type: portable, hazard: true, prompts: [jigsaw power tool]}
+  power_drill:       {type: portable, prompts: [power drill, cordless drill, drill]}
+  screwdriver:       {type: portable, prompts: [screwdriver]}
+  tape_measure:      {type: portable, prompts: [tape measure, measuring tape]}
+  square:            {type: portable, prompts: [carpenter square, try square]}
+  clamp:             {type: portable, prompts: [clamp, c-clamp]}
+  wood_plane:        {type: portable, prompts: [wood plane hand tool]}
+  sander:            {type: portable, prompts: [electric sander, sanding block]}
+  router_tool:       {type: portable, hazard: true, prompts: [wood router power tool]}
+  nail_gun:          {type: portable, prompts: [nail gun]}
+  pencil:            {type: portable, prompts: [pencil, marker pen]}
+  wood_plank:        {type: portable, prompts: [wooden plank, wooden board, plywood]}
+  nail_or_screw:     {type: portable, prompts: [nail, screw]}
+
+  # --- electrical ---
+  pliers:            {type: portable, prompts: [pliers]}
+  wire_stripper:     {type: portable, prompts: [wire stripper]}
+  wire_cutter:       {type: portable, prompts: [wire cutter]}
+  multimeter:        {type: portable, prompts: [multimeter]}
+  voltage_tester:    {type: portable, prompts: [voltage tester pen]}
+  electrical_tape:   {type: portable, prompts: [electrical tape, insulation tape]}
+  wire:              {type: portable, prompts: [electric wire, cable]}
+  soldering_iron:    {type: portable, prompts: [soldering iron]}
+  crimping_tool:     {type: portable, prompts: [crimping tool]}
+  switch_board:      {type: fixed,    prompts: [electrical switch board, electrical panel]}
+
+  # --- marble / stone ---
+  angle_grinder:     {type: portable, hazard: true, prompts: [angle grinder]}
+  cutting_disc:      {type: portable, hazard: true, prompts: [grinding disc, cutting disc]}
+  marble_cutter:     {type: portable, hazard: true, prompts: [marble cutter, tile cutter]}
+  trowel:            {type: portable, prompts: [trowel]}
+  spirit_level:      {type: portable, prompts: [spirit level]}
+  polishing_machine: {type: portable, hazard: true, prompts: [polishing machine]}
+  marble_slab:       {type: portable, prompts: [marble slab, stone slab, tile]}
+  sponge:            {type: portable, prompts: [sponge]}
+  bucket:            {type: portable, prompts: [bucket]}
+
+  # --- general ---
+  wrench:            {type: portable, prompts: [wrench, spanner]}
+  utility_knife:     {type: portable, hazard: true, prompts: [utility knife, cutter knife]}
+  scissors:          {type: portable, prompts: [scissors]}
+  bolt_or_nut:       {type: portable, prompts: [bolt, nut]}
+  box:               {type: portable, prompts: [cardboard box, box]}
+  bottle:            {type: portable, prompts: [bottle]}
+
+  # --- fixed surfaces and machines ---
+  workbench:         {type: fixed, prompts: [workbench, work table, table]}
+  machine:           {type: fixed, prompts: [machine, industrial machine]}
+  table_saw:         {type: fixed, hazard: true, prompts: [table saw]}
+  drill_press:       {type: fixed, hazard: true, prompts: [drill press]}
+  vise:              {type: fixed, prompts: [vise, bench vise]}
+  shelf:             {type: fixed, prompts: [shelf, rack]}
+  wall:              {type: fixed, prompts: [wall]}
+  floor:             {type: fixed, prompts: [floor]}
+
+  # --- moving machine parts (hazards) ---
+  saw_blade:         {type: fixed, hazard: true, prompts: [saw blade, spinning blade]}
+  drill_bit:         {type: portable, hazard: true, prompts: [drill bit]}
+
+# Catch-alls: used when nothing specific matches. Output label_status = "unidentified".
+generic:
+  tool:              {type: portable, prompts: [tool, hand tool, power tool]}
+  object:            {type: unknown,  prompts: [object]}
+
+# Detections with these names are the worker's own body or PPE, not objects. Removed near hands.
+ignore: [hand, glove, gloved hand, arm, finger, wrist, person, sleeve]

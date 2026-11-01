@@ -65,13 +65,20 @@ export function mergeResultFiles(existing, parsedFiles) {
 }
 
 // Use a bounded nearest observation. Never carry forward a hand pose during prolonged missing detections.
-export function closestFrame(frames,tMs,maxGapMs=150){
-  if(!Array.isArray(frames)||!frames.length||!Number.isFinite(tMs))return null;
+export function closestFrameIndex(frames,tMs){
+  if(!Array.isArray(frames)||!frames.length||!Number.isFinite(tMs))return -1;
   let lo=0,hi=frames.length;
   while(lo<hi){const mid=(lo+hi)>>1;if(frames[mid].t_ms<tMs)lo=mid+1;else hi=mid;}
-  const a=lo>0?frames[lo-1]:null,b=lo<frames.length?frames[lo]:null;
-  const best=!a?b:!b?a:(Math.abs(a.t_ms-tMs)<=Math.abs(b.t_ms-tMs)?a:b);
-  return best&&Math.abs(best.t_ms-tMs)<=maxGapMs?best:null;
+  if(lo===0)return 0;
+  if(lo===frames.length)return frames.length-1;
+  return Math.abs(frames[lo-1].t_ms-tMs)<=Math.abs(frames[lo].t_ms-tMs)?lo-1:lo;
+}
+
+export function closestFrame(frames,tMs,maxGapMs=150){
+  const index=closestFrameIndex(frames,tMs);
+  if(index<0)return null;
+  const best=frames[index];
+  return Math.abs(best.t_ms-tMs)<=maxGapMs?best:null;
 }
 
 export function frameWithObjects(results,tMs){
@@ -97,7 +104,28 @@ export function threeDHandsAt(results,tMs){
 }
 
 export function mergeActionOverrides(actions,overrides={}){
-  return (actions||[]).map(a=>({...a,...(overrides[a.action_id]||{})}));
+  return (actions||[]).map(a=>({...a,...(overrides[a.action_id]||{})})).filter(a=>!a.deleted);
+}
+export function applyObjectCorrections(objects,overrides={}){
+  return (objects||[]).filter(o=>!overrides[o.object_id]?.deleted).map(o=>{
+    const edit=overrides[o.object_id]||{}, target=edit.mergeInto, targetEdit=target&&overrides[target];
+    return {...o,object_id:target||o.object_id,label:targetEdit?.label||edit.label||o.label};
+  });
+}
+// Derived summaries are omitted because human edits do not recompute them.
+export function reviewedPS2(ps2,overrides={},manual=[]){
+  if(!ps2)return null;
+  const resolve=id=>id?(overrides[id]?.mergeInto||id):id;
+  const frames=ps2.frames.map(frame=>({...frame,
+    objects:applyObjectCorrections([...frame.objects,...manual.filter(o=>o.t_ms===frame.t_ms)],overrides),
+    hand_states:frame.hand_states.map(hand=>overrides[hand.object_id]?.deleted?{...hand,object_id:null,state:'unknown'}:{...hand,object_id:resolve(hand.object_id)})
+  }));
+  const contacts=ps2.contacts.filter(contact=>!overrides[contact.object_id]?.deleted).map(contact=>{
+    const edit=overrides[contact.object_id]||{};
+    return {...contact,object_id:resolve(contact.object_id),object_label:(edit.mergeInto&&overrides[edit.mergeInto]?.label)||edit.label||contact.object_label};
+  });
+  return {schema_version:ps2.schema_version,clip_id:ps2.clip_id,frames,contacts,
+    review_note:'Human-edited frames and contacts; original tool, review and safety summaries are omitted because they were not recomputed.'};
 }
 export function actionMatches(event,query='',filters={}){
   const q=query.trim().toLowerCase();

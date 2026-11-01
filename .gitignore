@@ -35,3 +35,12 @@ dist/
 
 # Public Studio design asset (not private footage)
 !frontend/public/assets/forge-dashboard-reference.png
+!frontend/public/assets/rigged-hand/
+!frontend/public/assets/rigged-hand/*
+
+scratch/
+ps2_work/
+cache/
+outputs/tmp/
+*.pt
+mobileclip2_b.ts

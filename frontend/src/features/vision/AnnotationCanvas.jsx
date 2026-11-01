@@ -1,20 +1,22 @@
-import React,{useEffect,useRef} from 'react';
+import React,{useEffect,useRef,useState} from 'react';
 import {HAND_CONNECTIONS} from '@/mocks/demoData';
 import {usePlaybackStore} from '@/stores/usePlaybackStore';
-export function AnnotationCanvas({frame,sourceWidth=1280,sourceHeight=720}){
-  const canvasRef=useRef(null),overlays=usePlaybackStore(s=>s.overlays);
+export function AnnotationCanvas({frame,sourceWidth=1280,sourceHeight=720,drawing=false,draftBox=null,onDraw}){
+  const [preview,setPreview]=useState(null);const canvasRef=useRef(null),startRef=useRef(null),overlays=usePlaybackStore(s=>s.overlays);
   useEffect(()=>{
     const canvas=canvasRef.current;if(!canvas)return;
     const draw=()=>{const bounds=canvas.getBoundingClientRect();if(!bounds.width||!bounds.height)return;const dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(bounds.width*dpr);canvas.height=Math.round(bounds.height*dpr);const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,bounds.width,bounds.height);if(!frame)return;
       const scale=Math.min(bounds.width/sourceWidth,bounds.height/sourceHeight),offsetX=(bounds.width-sourceWidth*scale)/2,offsetY=(bounds.height-sourceHeight*scale)/2;
       function pos(p){return [offsetX+p[0]*scale,offsetY+p[1]*scale]}
       const label=(text,x,y,color)=>{ctx.font='600 12px Inter, sans-serif';const width=ctx.measureText(text).width+16;ctx.fillStyle=color;ctx.fillRect(x,Math.max(0,y-22),width,20);ctx.fillStyle='#fff';ctx.fillText(text,x+8,Math.max(13,y-8));};
-      if(overlays.objects){for(const obj of frame.objects||[]){const[x1,y1]=pos([obj.bbox_px[0],obj.bbox_px[1]]),[x2,y2]=pos([obj.bbox_px[2],obj.bbox_px[3]]);ctx.strokeStyle='#f66d92';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(x1,y1,x2-x1,y2-y1);ctx.setLineDash([]);if(overlays.labels)label(`${obj.label} ${(obj.confidence*100).toFixed(0)}%`,x1,y1,'#c8486e');}}
+      if(overlays.objects){for(const obj of frame.objects||[]){if((overlays.masks??true)&&Array.isArray(obj.mask_polygon_px)&&obj.mask_polygon_px.length>=3){const pts=obj.mask_polygon_px.map(pos);ctx.beginPath();ctx.moveTo(...pts[0]);for(const point of pts.slice(1))ctx.lineTo(...point);ctx.closePath();ctx.fillStyle='rgba(246,109,146,.22)';ctx.strokeStyle='#f66d92';ctx.lineWidth=2;ctx.fill();ctx.stroke();}const[x1,y1]=pos([obj.bbox_px[0],obj.bbox_px[1]]),[x2,y2]=pos([obj.bbox_px[2],obj.bbox_px[3]]);ctx.strokeStyle='#f66d92';ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.strokeRect(x1,y1,x2-x1,y2-y1);ctx.setLineDash([]);if(overlays.labels)label(`${obj.label} ${obj.confidence==null?'(manual)':`${(obj.confidence*100).toFixed(0)}%`}`,x1,y1,'#c8486e');}}
+      const box=preview||draftBox;if(box){const [x1,y1]=pos([box[0],box[1]]),[x2,y2]=pos([box[2],box[3]]);ctx.strokeStyle='#38bdf8';ctx.fillStyle='rgba(56,189,248,.12)';ctx.lineWidth=2;ctx.setLineDash([7,4]);ctx.fillRect(x1,y1,x2-x1,y2-y1);ctx.strokeRect(x1,y1,x2-x1,y2-y1);ctx.setLineDash([]);}
       if(overlays.hands){for(const hand of frame.hands||[]){const color=hand.side==='right'?'#42e8ac':'#f7b95d';const pts=hand.kp2d_px.map(pos);if(overlays.connections){ctx.strokeStyle=color;ctx.lineWidth=2.5;for(const [a,b] of HAND_CONNECTIONS){ctx.beginPath();ctx.moveTo(...pts[a]);ctx.lineTo(...pts[b]);ctx.stroke();}}
         for(const [x,y] of pts){ctx.beginPath();ctx.arc(x,y,3.2,0,2*Math.PI);ctx.fillStyle='#e8fff7';ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=1.4;ctx.stroke();}
         const [x1,y1]=pos([hand.bbox_px[0],hand.bbox_px[1]]),[x2,y2]=pos([hand.bbox_px[2],hand.bbox_px[3]]);ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.strokeRect(x1,y1,x2-x1,y2-y1);ctx.setLineDash([]);if(overlays.labels)label(`${hand.side} · ${hand.hand_id}`,x1,y1,color==='#42e8ac'?'#138d73':'#c17d2b');}}
     };
     const ro=new ResizeObserver(draw);ro.observe(canvas);draw();return ()=>ro.disconnect();
-  },[frame,sourceWidth,sourceHeight,overlays]);
-  return <canvas ref={canvasRef} aria-label="Hand landmark and object annotation overlay" className="pointer-events-none absolute inset-0 h-full w-full"/>;
+  },[frame,sourceWidth,sourceHeight,overlays,preview,draftBox]);
+  const point=e=>{const bounds=canvasRef.current.getBoundingClientRect(),scale=Math.min(bounds.width/sourceWidth,bounds.height/sourceHeight),ox=(bounds.width-sourceWidth*scale)/2,oy=(bounds.height-sourceHeight*scale)/2;return [Math.max(0,Math.min(sourceWidth,(e.clientX-bounds.left-ox)/scale)),Math.max(0,Math.min(sourceHeight,(e.clientY-bounds.top-oy)/scale))];};
+  return <canvas ref={canvasRef} aria-label={drawing?'Draw an object box by dragging across the video':'Hand landmark and object annotation overlay'} className={`absolute inset-0 h-full w-full ${drawing?'cursor-crosshair touch-none':'pointer-events-none'}`} onPointerDown={e=>{if(!drawing)return;startRef.current=point(e);setPreview([...startRef.current,...startRef.current]);e.currentTarget.setPointerCapture(e.pointerId);}} onPointerMove={e=>{if(!drawing||!startRef.current)return;const a=startRef.current,b=point(e);setPreview([Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[0],b[0]),Math.max(a[1],b[1])]);}} onPointerUp={e=>{if(!drawing||!startRef.current)return;const a=startRef.current,b=point(e);startRef.current=null;setPreview(null);const box=[Math.round(Math.min(a[0],b[0])),Math.round(Math.min(a[1],b[1])),Math.round(Math.max(a[0],b[0])),Math.round(Math.max(a[1],b[1]))];if(box[2]-box[0]>=5&&box[3]-box[1]>=5)onDraw?.(box);}} onPointerCancel={()=>{startRef.current=null;setPreview(null);}}/>;
 }

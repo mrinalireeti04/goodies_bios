@@ -1,0 +1,110 @@
+﻿device: auto              # cuda:0 if available, else cpu
+half: true
+det_model: yoloe-26s-seg.pt
+imgsz: 640
+det_conf: 0.25             # reject low-confidence detections before tracking
+det_max_frame_fraction: 0.75  # reject boxes covering most of the image
+det_interval_frames: 3    # YOLOE runs every third frame; boxes are tracked between detections
+hand_overlap_iou: 0.6
+max_hand_gap_ms: 300
+interpolated_factor: 0.7
+v0_pad_norm: 0.15          # Phase 1 rule: tips inside box padded by this many hand sizes
+tip_near_norm: 0.35
+min_tips: 2
+on_frames: 3
+off_frames: 3
+merge_gap_ms: 300
+min_interval_ms: 200
+comotion_window_ms: 500
+min_hand_move_norm: 0.15
+review_threshold: 0.5
+label_min_conf: 0.35
+use_merge_gap_ms: 1000
+reid_min_sim: 0.7
+clean_crop_max_overlap: 0.1
+hazard_motion_thresh: 12.0
+safety_near_norm: 0.5
+safety_min_ms: 300
+sam2_enabled: false
+
+
+# --- Phase 2 additions (see decision.md) ---
+grip_curl_min: 0.5          # finger curl at or above this = gripping
+flat_curl_max: 0.25         # finger curl at or below this = flat hand
+comove_tol: 0.5             # object counts as moving with the hand if its motion differs from the hand's by < this fraction
+contact_min_obj_conf: 0.2   # below this detector confidence the contact is unknown (low_object_confidence)
+big_box_frac: 0.15          # a fixed box covering this fraction of the frame counts as big (table, floor, wall)
+ambiguous_area_ratio: 1.5   # two equal candidates whose box areas are within this ratio are ambiguous
+w_tips: 0.35                # contact confidence weights (sum to 1)
+w_det: 0.25
+w_curl: 0.2
+w_comotion: 0.2
+review_reason_frac: 0.3     # reasons on more than this fraction of an interval's frames -> review_needed
+motion_width: 480           # camera-motion estimate runs on frames this wide
+motion_max_corners: 200
+motion_min_points: 8        # fewer background points than this = motion estimate unreliable
+reid_tie_margin: 0.05       # a second match this close to the best one makes the merge "identity_uncertain"
+reid_max_gap_ms: 3000       # merging two pieces with no colour fingerprint needs them this close in time
+min_tool_ms: 500            # an object seen for less than this (and not in any contact) gets no tools[] row and no review items
+appearance_gap_ms: 500      # a gap longer than this between sightings starts a new appearance
+long_unknown_ms: 1000       # a hand state that stays unknown longer than this goes into the review queue
+hazard_window_ms: 500       # "moving" is judged over a window this long
+hazard_moving_frac: 0.5     # a hazard is moving if more than this share of the window's frames changed above hazard_motion_thresh
+
+# --- Phase 6b: detection near the hands, box sanity, naming of held objects ---
+hand_crop_enabled: true     # also run the detector on a crop around every PS1 hand
+hand_crop_scale: 2.5        # crop side = hand box longer side x this, resized to imgsz
+nms_iou: 0.5                # merging frame + hand-crop detections: same-class boxes above this IoU keep the more confident one
+max_portable_frac: 0.25     # a portable-type box covering more than this fraction of the frame gets the generic label
+vlm_model: gemini-3.6-flash   # chosen from ListModels (dev/gemini_models.py); newest flash models were slow or overloaded
+vlm_fallback_model: gemini-3.5-flash-lite   # one try if the main model keeps failing with rate-limit/overload errors
+vlm_thinking_level: low     # main model only; its default thinking took up to 80 s per call
+vlm_max_calls_per_clip: 20  # HTTP requests (retries included) per clip, for vocabulary and naming together
+vlm_retries: 3              # tries on the main model for rate limits / overload, with exponential backoff
+vlm_backoff_s: 2            # first wait; doubles each retry
+vlm_timeout_s: 60
+safety_enabled: true        # false = no safety events at all
+vocab_frames: 24            # frames sampled for the per-video vocabulary (3 batches of 8)
+vocab_frame_max_px: 768     # longest side of each sampled frame sent to Gemini
+vocab_min_batches: 2        # a name must appear in at least this many of the 3 batches
+vocab_max_objects: 40
+
+# --- Phase 7: PS1 contract (hand_id not persistent, no bystander filter) ---
+ego_min_scale_ratio: 0.5      # a hand smaller than this fraction of the largest hand in the frame is dropped as a bystander
+ego_max_wrist_top_frac: 0.35  # a hand whose wrist is in the top this fraction of the frame is dropped as a bystander
+ego_max_hands: 2              # at most this many wearer hands per frame
+track_max_gap_frames: 10      # a hand track survives this many frames without a matching hand (PS1 fills gaps up to 10)
+track_min_iou: 0.1            # hand box overlap that lets a hand continue a track ...
+track_max_wrist_norm: 1.5     # ... or wrist movement (in hand sizes) below this
+track_side_override_iou: 0.5  # a side label may flip on the same hand if the boxes overlap at least this much
+
+# --- Phase 7: tool ledger, fusion, SAM 2 ---
+use_ledger: true              # Gemini watches the whole clip once; false = base vocabulary only
+vocab_auto_enabled: false     # the Phase 6c per-video vocabulary from 24 frames (kept, switched off)
+ledger_fps: 2                 # frames per second Gemini samples from the video
+ledger_max_window_s: 300      # longer videos are split into windows of this length (real clipping)
+ledger_max_tools: 30
+ledger_max_height: 720        # the temporary upload copy is at most this tall, no audio, CRF 30
+ledger_timeout_s: 300         # one ledger request may take this long
+ledger_time_tol_ms: 1000      # a ledger use matches a local contact if they are this close in time
+crop_batch_size: 8            # object crops per Gemini request in the crop check
+sam2_enabled: true            # SAM 2.1 tiny masks for hold contacts of portable objects
+sam2_model: sam2.1_t.pt
+sam2_tail_ms: 500             # keep tracking this long after the contact ends
+sam2_max_side: 720            # frames given to SAM 2 are shrunk to this longest side
+sam2_budget_s: 300            # stop adding masks (longest contacts first) after this much time
+sam2_imgsz: 1024              # SAM 2 input size
+vlm_naming_enabled: true      # without a ledger: name held objects from their crops (Phase 6b); false = purely local
+
+# --- independent proposals + judge (dev tools read these too) ---
+independent_max_calls: 6      # Gemini Pro requests per clip for the independent proposals (retries included)
+independent_timeout_s: 600    # Pro models think first; one request may take this long
+groq_model: qwen/qwen3.8-27b  # per-item judge (image-only, at most 3 images per request)
+groq_max_requests_per_day: 900   # our own cap, below the free tier's daily request limit
+groq_max_tokens_per_day: 55000   # planning cap: this key was stopped by Groq after about 59,000 tokens in one day (not in the headers)
+groq_image_px: 512            # longest side of the frames sent to the judge (the brief allows up to 768); smaller = fewer tokens
+groq_tokens_per_image: 300    # planning estimate at 512 px (at 768 px a 3-image request used about 2,500 tokens)
+groq_max_wait_s: 900          # a 429 asking for a longer wait than this ends judging for now (cached answers are kept)
+checklist_size: 40            # about this many items per clip
+checklist_seed: 7             # fixed seed for the random sample of agreements
+checklist_iou: 0.3            # time overlap that makes two proposals "the same contact"
